@@ -70,27 +70,16 @@ type value struct {
 // To disable that panic for access to an undocumented setting,
 // prefix the name with a #, as in godebug.New("#gofsystrace").
 // The # is a signal to New but not part of the key used in $GODEBUG.
-func New(name string) *Setting {
-	return &Setting{name: name}
-}
+func New(name string) *Setting { _ = "STUB: not implemented"; return nil }
 
 // Name returns the name of the setting.
-func (s *Setting) Name() string {
-	if s.name != "" && s.name[0] == '#' {
-		return s.name[1:]
-	}
-	return s.name
-}
+func (s *Setting) Name() string { _ = "STUB: not implemented"; return "" }
 
 // Undocumented reports whether this is an undocumented setting.
-func (s *Setting) Undocumented() bool {
-	return s.name != "" && s.name[0] == '#'
-}
+func (s *Setting) Undocumented() bool { _ = "STUB: not implemented"; return false }
 
 // String returns a printable form for the setting: name=value.
-func (s *Setting) String() string {
-	return s.Name() + "=" + s.Value()
-}
+func (s *Setting) String() string { _ = "STUB: not implemented"; return "" }
 
 // IncNonDefault increments the non-default behavior counter
 // associated with the given setting.
@@ -98,16 +87,9 @@ func (s *Setting) String() string {
 // /godebug/non-default-behavior/<name>:events.
 //
 // Note that Value must be called at least once before IncNonDefault.
-func (s *Setting) IncNonDefault() {
-	s.nonDefaultOnce.Do(s.register)
-	s.nonDefault.Add(1)
-}
+func (s *Setting) IncNonDefault() { _ = "STUB: not implemented"; return }
 
-func (s *Setting) register() {
-	if s.info == nil || s.info.Opaque {
-		panic("godebug: unexpected IncNonDefault of " + s.name)
-	}
-}
+func (s *Setting) register() { _ = "STUB: not implemented"; return }
 
 // cache is a cache of all the GODEBUG settings,
 // a locked map[string]*atomic.Pointer[string].
@@ -133,67 +115,28 @@ var empty value
 // making Value efficient to call as frequently as needed.
 // Clients should therefore typically not attempt their own
 // caching of Value's result.
-func (s *Setting) Value() string {
-	s.once.Do(func() {
-		s.setting = lookup(s.Name())
-		if s.info == nil && !s.Undocumented() {
-			panic("godebug: Value of name not listed in godebugs.All: " + s.name)
-		}
-	})
-	v := *s.value.Load()
-	if v.bisect != nil && !v.bisect.Stack(&stderr) {
-		return ""
-	}
-	return v.text
-}
+func (s *Setting) Value() string { _ = "STUB: not implemented"; return "" }
 
 // lookup returns the unique *setting value for the given name.
-func lookup(name string) *setting {
-	if v, ok := cache.Load(name); ok {
-		return v.(*setting)
-	}
-	s := new(setting)
-	s.info = godebugs.Lookup(name)
-	s.value.Store(&empty)
-	if v, loaded := cache.LoadOrStore(name, s); loaded {
-		// Lost race: someone else created it. Use theirs.
-		return v.(*setting)
-	}
+func lookup(name string) *setting { _ = "STUB: not implemented"; return nil }
 
-	return s
-}
+// Lost race: someone else created it. Use theirs.
 
-func newIncNonDefault(name string) func() {
-	s := New(name)
-	s.Value()
-	return s.IncNonDefault
-}
+func newIncNonDefault(name string) func() { _ = "STUB: not implemented"; return nil }
 
 var updateMu sync.Mutex
 
 // update records an updated GODEBUG setting.
 // def is the default GODEBUG setting for the running binary,
 // and env is the current value of the $GODEBUG environment variable.
-func update(def, env string) {
-	updateMu.Lock()
-	defer updateMu.Unlock()
+func update(def, env string) { _ = "STUB: not implemented"; return }
 
-	// Update all the cached values, creating new ones as needed.
-	// We parse the environment variable first, so that any settings it has
-	// are already locked in place (did[name] = true) before we consider
-	// the defaults.
-	did := make(map[string]bool)
-	parse(did, env)
-	parse(did, def)
+// Update all the cached values, creating new ones as needed.
+// We parse the environment variable first, so that any settings it has
+// are already locked in place (did[name] = true) before we consider
+// the defaults.
 
-	// Clear any cached values that are no longer present.
-	cache.Range(func(name, s any) bool {
-		if !did[name.(string)] {
-			s.(*setting).value.Store(&empty)
-		}
-		return true
-	})
-}
+// Clear any cached values that are no longer present.
 
 // parse parses the GODEBUG setting string s,
 // which has the form k=v,k2=v2,k3=v3.
@@ -204,42 +147,17 @@ func update(def, env string) {
 // in which case the GODEBUG is only enabled for call stacks
 // matching pattern, for use with golang.org/x/tools/cmd/bisect.
 func parse(did map[string]bool, s string) {
+	_ = "STUB: not implemented"
 	// Scan the string backward so that later settings are used
 	// and earlier settings are ignored.
 	// Note that a forward scan would cause cached values
 	// to temporarily use the ignored value before being
 	// updated to the "correct" one.
-	end := len(s)
-	eq := -1
-	for i := end - 1; i >= -1; i-- {
-		if i == -1 || s[i] == ',' {
-			if eq >= 0 {
-				name, arg := s[i+1:eq], s[eq+1:end]
-				if !did[name] {
-					did[name] = true
-					v := &value{text: arg}
-					for j := 0; j < len(arg); j++ {
-						if arg[j] == '#' {
-							v.text = arg[:j]
-							v.bisect, _ = bisect.New(arg[j+1:])
-							break
-						}
-					}
-					lookup(name).value.Store(v)
-				}
-			}
-			eq = -1
-			end = i
-		} else if s[i] == '=' {
-			eq = i
-		}
-	}
+	return
 }
 
 type runtimeStderr struct{}
 
 var stderr runtimeStderr
 
-func (*runtimeStderr) Write(b []byte) (int, error) {
-	return len(b), nil
-}
+func (*runtimeStderr) Write(b []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }

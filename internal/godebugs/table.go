@@ -59,20 +59,7 @@ var All = []Info{
 
 // Lookup returns the Info with the given name.
 func Lookup(name string) *Info {
+	_ = "STUB: not implemented"
 	// binary search, avoiding import of sort.
-	lo := 0
-	hi := len(All)
-	for lo < hi {
-		m := int(uint(lo+hi) >> 1)
-		mid := All[m].Name
-		if name == mid {
-			return &All[m]
-		}
-		if name < mid {
-			hi = m
-		} else {
-			lo = m + 1
-		}
-	}
 	return nil
 }

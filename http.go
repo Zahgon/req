@@ -1,16 +1,8 @@
 package req
 
 import (
-	"encoding/base64"
-	"fmt"
 	"io"
 	"net/http"
-	"net/textproto"
-	"strings"
-
-	"github.com/imroc/req/v3/internal/ascii"
-	"golang.org/x/net/http/httpguts"
-	"golang.org/x/net/idna"
 )
 
 // maxInt64 is the effective "infinite" value for the Server and
@@ -29,29 +21,22 @@ type incomparable [0]func()
 // connection is done being managed from its perspective. Once we
 // return a writable response body to a user, the net/http package is
 // done managing that connection.
-func bodyIsWritable(r *http.Response) bool {
-	_, ok := r.Body.(io.Writer)
-	return ok
-}
+func bodyIsWritable(r *http.Response) bool { _ = "STUB: not implemented"; return false }
 
 // isProtocolSwitch reports whether the response code and header
 // indicate a successful protocol upgrade response.
-func isProtocolSwitch(r *http.Response) bool {
-	return isProtocolSwitchResponse(r.StatusCode, r.Header)
-}
+func isProtocolSwitch(r *http.Response) bool { _ = "STUB: not implemented"; return false }
 
 // isProtocolSwitchResponse reports whether the response code and
 // response header indicate a successful protocol upgrade response.
 func isProtocolSwitchResponse(code int, h http.Header) bool {
-	return code == http.StatusSwitchingProtocols && isProtocolSwitchHeader(h)
+	_ = "STUB: not implemented"
+	return false
 }
 
 // isProtocolSwitchHeader reports whether the request or response header
 // is for a protocol switch.
-func isProtocolSwitchHeader(h http.Header) bool {
-	return h.Get("Upgrade") != "" &&
-		httpguts.HeaderValuesContainsToken(h["Connection"], "Upgrade")
-}
+func isProtocolSwitchHeader(h http.Header) bool { _ = "STUB: not implemented"; return false }
 
 // NoBody is an io.ReadCloser with no bytes. Read always returns EOF
 // and Close always returns nil. It can be used in an outgoing client
@@ -61,12 +46,17 @@ var NoBody = noBody{}
 
 type noBody struct{}
 
-func (noBody) Read([]byte) (int, error)         { return 0, io.EOF }
-func (noBody) Close() error                     { return nil }
-func (noBody) WriteTo(io.Writer) (int64, error) { return 0, nil }
+func (noBody) Read([]byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
+func (noBody) Close() error             { _ = "STUB: not implemented"; return nil }
+func (noBody) WriteTo(io.Writer) (int64, error) {
+	_ = "STUB: not implemented"
+	return 0,
+
+		// verify that an io.Copy from NoBody won't require a buffer:
+		nil
+}
 
 var (
-	// verify that an io.Copy from NoBody won't require a buffer:
 	_ io.WriterTo   = NoBody
 	_ io.ReadCloser = NoBody
 )
@@ -82,61 +72,26 @@ type readResult struct {
 // case-insensitive, with space or comma boundaries.
 // token must be all lowercase.
 // v may contain mixed cased.
-func hasToken(v, token string) bool {
-	if len(token) > len(v) || token == "" {
-		return false
-	}
-	if v == token {
-		return true
-	}
-	for sp := 0; sp <= len(v)-len(token); sp++ {
-		// Check that first character is good.
-		// The token is ASCII, so checking only a single byte
-		// is sufficient. We skip this potential starting
-		// position if both the first byte and its potential
-		// ASCII uppercase equivalent (b|0x20) don't match.
-		// False positives ('^' => '~') are caught by EqualFold.
-		if b := v[sp]; b != token[0] && b|0x20 != token[0] {
-			continue
-		}
-		// Check that start pos is on a valid token boundary.
-		if sp > 0 && !isTokenBoundary(v[sp-1]) {
-			continue
-		}
-		// Check that end pos is on a valid token boundary.
-		if endPos := sp + len(token); endPos != len(v) && !isTokenBoundary(v[endPos]) {
-			continue
-		}
-		if ascii.EqualFold(v[sp:sp+len(token)], token) {
-			return true
-		}
-	}
-	return false
-}
+func hasToken(v, token string) bool { _ = "STUB: not implemented"; return false }
 
-func isTokenBoundary(b byte) bool {
-	return b == ' ' || b == ',' || b == '\t'
-}
+// Check that first character is good.
+// The token is ASCII, so checking only a single byte
+// is sufficient. We skip this potential starting
+// position if both the first byte and its potential
+// ASCII uppercase equivalent (b|0x20) don't match.
+// False positives ('^' => '~') are caught by EqualFold.
 
-func badStringError(what, val string) error { return fmt.Errorf("%s %q", what, val) }
+// Check that start pos is on a valid token boundary.
+
+// Check that end pos is on a valid token boundary.
+
+func isTokenBoundary(b byte) bool { _ = "STUB: not implemented"; return false }
+
+func badStringError(what, val string) error { _ = "STUB: not implemented"; return nil }
 
 // foreachHeaderElement splits v according to the "#rule" construction
 // in RFC 7230 section 7 and calls fn for each non-empty element.
-func foreachHeaderElement(v string, fn func(string)) {
-	v = textproto.TrimString(v)
-	if v == "" {
-		return
-	}
-	if !strings.Contains(v, ",") {
-		fn(v)
-		return
-	}
-	for _, f := range strings.Split(v, ",") {
-		if f = textproto.TrimString(f); f != "" {
-			fn(f)
-		}
-	}
-}
+func foreachHeaderElement(v string, fn func(string)) { _ = "STUB: not implemented"; return }
 
 // maxPostHandlerReadBytes is the max number of Request.Body bytes not
 // consumed by a handler that the server will read from the client
@@ -150,6 +105,7 @@ func foreachHeaderElement(v string, fn func(string)) {
 const maxPostHandlerReadBytes = 256 << 10
 
 func idnaASCII(v string) (string, error) {
+	_ = "STUB: not implemented"
 	// TODO: Consider removing this check after verifying performance is okay.
 	// Right now punycode verification, length checks, context checks, and the
 	// permissible character tests are all omitted. It also prevents the ToASCII
@@ -159,46 +115,19 @@ func idnaASCII(v string) (string, error) {
 	// version does not.
 	// Note that for correct ASCII IDNs ToASCII will only do considerably more
 	// work, but it will not cause an allocation.
-	if ascii.Is(v) {
-		return v, nil
-	}
-	return idna.Lookup.ToASCII(v)
+	return "", nil
 }
 
 // removeZone removes IPv6 zone identifier from host.
 // E.g., "[fe80::1%en0]:8080" to "[fe80::1]:8080"
-func removeZone(host string) string {
-	if !strings.HasPrefix(host, "[") {
-		return host
-	}
-	i := strings.LastIndex(host, "]")
-	if i < 0 {
-		return host
-	}
-	j := strings.LastIndex(host[:i], "%")
-	if j < 0 {
-		return host
-	}
-	return host[:j] + host[i:]
-}
+func removeZone(host string) string { _ = "STUB: not implemented"; return "" }
 
 // stringContainsCTLByte reports whether s contains any ASCII control character.
-func stringContainsCTLByte(s string) bool {
-	for i := 0; i < len(s); i++ {
-		b := s[i]
-		if b < ' ' || b == 0x7f {
-			return true
-		}
-	}
-	return false
-}
+func stringContainsCTLByte(s string) bool { _ = "STUB: not implemented"; return false }
 
 // See 2 (end of page 4) https://www.ietf.org/rfc/rfc2617.txt
 // "To receive authorization, the client sends the userid and password,
 // separated by a single colon (":") character, within a base64
 // encoded string in the credentials."
 // It is not meant to be urlencoded.
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
+func basicAuth(username, password string) string { _ = "STUB: not implemented"; return "" }

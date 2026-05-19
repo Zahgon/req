@@ -26,51 +26,15 @@ type body struct {
 	hasContentLength       bool
 }
 
-func newBody(str *Stream, contentLength int64) *body {
-	b := &body{str: str}
-	if contentLength >= 0 {
-		b.hasContentLength = true
-		b.remainingContentLength = contentLength
-	}
-	return b
-}
+func newBody(str *Stream, contentLength int64) *body { _ = "STUB: not implemented"; return nil }
 
-func (r *body) StreamID() quic.StreamID { return r.str.StreamID() }
+func (r *body) StreamID() quic.StreamID { _ = "STUB: not implemented"; return *new(quic.StreamID) }
 
-func (r *body) checkContentLengthViolation() error {
-	if !r.hasContentLength {
-		return nil
-	}
-	if r.remainingContentLength < 0 || r.remainingContentLength == 0 && r.str.hasMoreData() {
-		if !r.violatedContentLength {
-			r.str.CancelRead(quic.StreamErrorCode(ErrCodeMessageError))
-			r.str.CancelWrite(quic.StreamErrorCode(ErrCodeMessageError))
-			r.violatedContentLength = true
-		}
-		return errTooMuchData
-	}
-	return nil
-}
+func (r *body) checkContentLengthViolation() error { _ = "STUB: not implemented"; return nil }
 
-func (r *body) Read(b []byte) (int, error) {
-	if err := r.checkContentLengthViolation(); err != nil {
-		return 0, err
-	}
-	if r.hasContentLength {
-		b = b[:min(int64(len(b)), r.remainingContentLength)]
-	}
-	n, err := r.str.Read(b)
-	r.remainingContentLength -= int64(n)
-	if err := r.checkContentLengthViolation(); err != nil {
-		return n, err
-	}
-	return n, maybeReplaceError(err)
-}
+func (r *body) Read(b []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (r *body) Close() error {
-	r.str.CancelRead(quic.StreamErrorCode(ErrCodeRequestCanceled))
-	return nil
-}
+func (r *body) Close() error { _ = "STUB: not implemented"; return nil }
 
 type requestBody struct {
 	body
@@ -94,31 +58,17 @@ type hijackableBody struct {
 var _ io.ReadCloser = &hijackableBody{}
 
 func newResponseBody(str *Stream, contentLength int64, done chan<- struct{}) *hijackableBody {
-	return &hijackableBody{
-		body:    *newBody(str, contentLength),
-		reqDone: done,
-	}
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (r *hijackableBody) Read(b []byte) (int, error) {
-	n, err := r.body.Read(b)
-	if err != nil {
-		r.requestDone()
-	}
-	return n, maybeReplaceError(err)
-}
+func (r *hijackableBody) Read(b []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (r *hijackableBody) requestDone() {
-	if r.reqDone != nil {
-		r.reqDoneOnce.Do(func() {
-			close(r.reqDone)
-		})
-	}
-}
+func (r *hijackableBody) requestDone() { _ = "STUB: not implemented"; return }
 
 func (r *hijackableBody) Close() error {
-	r.requestDone()
+	_ = "STUB: not implemented"
+
 	// If the EOF was read, CancelRead() is a no-op.
-	r.body.str.CancelRead(quic.StreamErrorCode(ErrCodeRequestCanceled))
 	return nil
 }

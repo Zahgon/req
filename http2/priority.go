@@ -17,9 +17,7 @@ type PriorityParam struct {
 	Weight uint8
 }
 
-func (p PriorityParam) IsZero() bool {
-	return p == PriorityParam{}
-}
+func (p PriorityParam) IsZero() bool { _ = "STUB: not implemented"; return false }
 
 // PriorityFrame represents a http priority frame.
 type PriorityFrame struct {

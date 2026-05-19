@@ -6,13 +6,6 @@ const copyBufPoolSize = 32 * 1024
 
 var copyBufPool = sync.Pool{New: func() any { return new([copyBufPoolSize]byte) }}
 
-func getCopyBuf() []byte {
-	return copyBufPool.Get().(*[copyBufPoolSize]byte)[:]
-}
+func getCopyBuf() []byte { _ = "STUB: not implemented"; return nil }
 
-func putCopyBuf(b []byte) {
-	if len(b) != copyBufPoolSize {
-		panic("trying to put back buffer of the wrong size in the copyBufPool")
-	}
-	copyBufPool.Put((*[copyBufPoolSize]byte)(b))
-}
+func putCopyBuf(b []byte) { _ = "STUB: not implemented"; return }

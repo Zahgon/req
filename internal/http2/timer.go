@@ -17,4 +17,4 @@ type timeTimer struct {
 	*time.Timer
 }
 
-func (t timeTimer) C() <-chan time.Time { return t.Timer.C }
+func (t timeTimer) C() <-chan time.Time { _ = "STUB: not implemented"; return nil }

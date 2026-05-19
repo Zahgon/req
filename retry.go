@@ -1,13 +1,12 @@
 package req
 
 import (
-	"math"
-	"math/rand"
 	"time"
 )
 
 func defaultGetRetryInterval(resp *Response, attempt int) time.Duration {
-	return 100 * time.Millisecond
+	_ = "STUB: not implemented"
+	return *new(time.Duration)
 }
 
 // RetryConditionFunc is a retry condition, which determines
@@ -22,21 +21,11 @@ type RetryHookFunc func(resp *Response, err error)
 type GetRetryIntervalFunc func(resp *Response, attempt int) time.Duration
 
 func backoffInterval(min, max time.Duration) GetRetryIntervalFunc {
-	base := float64(min)
-	capLevel := float64(max)
-	return func(resp *Response, attempt int) time.Duration {
-		temp := math.Min(capLevel, base*math.Exp2(float64(attempt)))
-		halfTemp := int64(temp / 2)
-		sleep := halfTemp + rand.Int63n(halfTemp)
-		return time.Duration(sleep)
-	}
+	_ = "STUB: not implemented"
+	return *new(GetRetryIntervalFunc)
 }
 
-func newDefaultRetryOption() *retryOption {
-	return &retryOption{
-		GetRetryInterval: defaultGetRetryInterval,
-	}
-}
+func newDefaultRetryOption() *retryOption { _ = "STUB: not implemented"; return nil }
 
 type retryOption struct {
 	MaxRetries       int
@@ -45,15 +34,4 @@ type retryOption struct {
 	RetryHooks       []RetryHookFunc
 }
 
-func (ro *retryOption) Clone() *retryOption {
-	if ro == nil {
-		return nil
-	}
-	o := &retryOption{
-		MaxRetries:       ro.MaxRetries,
-		GetRetryInterval: ro.GetRetryInterval,
-	}
-	o.RetryConditions = append(o.RetryConditions, ro.RetryConditions...)
-	o.RetryHooks = append(o.RetryHooks, ro.RetryHooks...)
-	return o
-}
+func (ro *retryOption) Clone() *retryOption { _ = "STUB: not implemented"; return nil }

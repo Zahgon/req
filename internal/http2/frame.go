@@ -6,19 +6,13 @@ package http2
 
 import (
 	"bytes"
-	"context"
-	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/imroc/req/v3/http2"
 	"github.com/imroc/req/v3/internal/dump"
-	"golang.org/x/net/http/httpguts"
 	"golang.org/x/net/http2/hpack"
 )
 
@@ -56,21 +50,14 @@ var frameName = map[FrameType]string{
 	FrameContinuation: "CONTINUATION",
 }
 
-func (t FrameType) String() string {
-	if s, ok := frameName[t]; ok {
-		return s
-	}
-	return fmt.Sprintf("UNKNOWN_FRAME_TYPE_%d", uint8(t))
-}
+func (t FrameType) String() string { _ = "STUB: not implemented"; return "" }
 
 // Flags is a bitmask of HTTP/2 flags.
 // The meaning of flags varies depending on the frame type.
 type Flags uint8
 
 // Has reports whether f contains all (0 or more) flags in v.
-func (f Flags) Has(v Flags) bool {
-	return (f & v) == v
-}
+func (f Flags) Has(v Flags) bool { _ = "STUB: not implemented"; return false }
 
 // Frame-specific FrameHeader flag bits.
 const (
@@ -141,12 +128,7 @@ var frameParsers = map[FrameType]frameParser{
 	FrameContinuation: parseContinuationFrame,
 }
 
-func typeFrameParser(t FrameType) frameParser {
-	if f := frameParsers[t]; f != nil {
-		return f
-	}
-	return parseUnknownFrame
-}
+func typeFrameParser(t FrameType) frameParser { _ = "STUB: not implemented"; return *new(frameParser) }
 
 // A FrameHeader is the 9 byte header of all HTTP/2 frames.
 //
@@ -175,53 +157,22 @@ type FrameHeader struct {
 
 // Header returns h. It exists so FrameHeaders can be embedded in other
 // specific frame types and implement the Frame interface.
-func (h FrameHeader) Header() FrameHeader { return h }
+func (h FrameHeader) Header() FrameHeader { _ = "STUB: not implemented"; return *new(FrameHeader) }
 
-func (h FrameHeader) String() string {
-	var buf bytes.Buffer
-	buf.WriteString("[FrameHeader ")
-	h.writeDebug(&buf)
-	buf.WriteByte(']')
-	return buf.String()
+func (h FrameHeader) String() string { _ = "STUB: not implemented"; return "" }
+
+func (h FrameHeader) writeDebug(buf *bytes.Buffer) { _ = "STUB: not implemented"; return }
+
+func (h *FrameHeader) checkValid() { _ = "STUB: not implemented"; return }
+
+func (h *FrameHeader) invalidate() {
+	_ = "STUB: not implemented"
+
+	// frame header bytes.
+	// Used only by ReadFrameHeader.
+	return
 }
 
-func (h FrameHeader) writeDebug(buf *bytes.Buffer) {
-	buf.WriteString(h.Type.String())
-	if h.Flags != 0 {
-		buf.WriteString(" flags=")
-		set := 0
-		for i := uint8(0); i < 8; i++ {
-			if h.Flags&(1<<i) == 0 {
-				continue
-			}
-			set++
-			if set > 1 {
-				buf.WriteByte('|')
-			}
-			name := flagName[h.Type][Flags(1<<i)]
-			if name != "" {
-				buf.WriteString(name)
-			} else {
-				fmt.Fprintf(buf, "0x%x", 1<<i)
-			}
-		}
-	}
-	if h.StreamID != 0 {
-		fmt.Fprintf(buf, " stream=%d", h.StreamID)
-	}
-	fmt.Fprintf(buf, " len=%d", h.Length)
-}
-
-func (h *FrameHeader) checkValid() {
-	if !h.valid {
-		panic("Frame accessor called on non-owned Frame")
-	}
-}
-
-func (h *FrameHeader) invalidate() { h.valid = false }
-
-// frame header bytes.
-// Used only by ReadFrameHeader.
 var fhBytes = sync.Pool{
 	New: func() any {
 		buf := make([]byte, frameHeaderLen)
@@ -232,23 +183,13 @@ var fhBytes = sync.Pool{
 // ReadFrameHeader reads 9 bytes from r and returns a FrameHeader.
 // Most users should use Framer.ReadFrame instead.
 func ReadFrameHeader(r io.Reader) (FrameHeader, error) {
-	bufp := fhBytes.Get().(*[]byte)
-	defer fhBytes.Put(bufp)
-	return readFrameHeader(*bufp, r)
+	_ = "STUB: not implemented"
+	return *new(FrameHeader), nil
 }
 
 func readFrameHeader(buf []byte, r io.Reader) (FrameHeader, error) {
-	_, err := io.ReadFull(r, buf[:frameHeaderLen])
-	if err != nil {
-		return FrameHeader{}, err
-	}
-	return FrameHeader{
-		Length:   (uint32(buf[0])<<16 | uint32(buf[1])<<8 | uint32(buf[2])),
-		Type:     FrameType(buf[3]),
-		Flags:    Flags(buf[4]),
-		StreamID: binary.BigEndian.Uint32(buf[5:]) & (1<<31 - 1),
-		valid:    true,
-	}, nil
+	_ = "STUB: not implemented"
+	return *new(FrameHeader), nil
 }
 
 // A Frame is the base interface implemented by all frame types.
@@ -337,76 +278,38 @@ type Framer struct {
 	frameCache *frameCache // nil if frames aren't reused (default)
 }
 
-func (h2f *Framer) maxHeaderListSize() uint32 {
-	if h2f.MaxHeaderListSize == 0 {
-		return 16 << 20 // sane default, per docs
-	}
-	return h2f.MaxHeaderListSize
-}
+func (h2f *Framer) maxHeaderListSize() uint32 { _ = "STUB: not implemented"; return 0 }
+
+// sane default, per docs
 
 func (h2f *Framer) startWrite(ftype FrameType, flags Flags, streamID uint32) {
+	_ = "STUB: not implemented"
 	// Write the FrameHeader.
-	h2f.wbuf = append(h2f.wbuf[:0],
-		0, // 3 bytes of length, filled in in endWrite
-		0,
-		0,
-		byte(ftype),
-		byte(flags),
-		byte(streamID>>24),
-		byte(streamID>>16),
-		byte(streamID>>8),
-		byte(streamID))
+	return
 }
+
+// 3 bytes of length, filled in in endWrite
 
 func (h2f *Framer) endWrite() error {
+	_ = "STUB: not implemented"
 	// Now that we know the final size, fill in the FrameHeader in
 	// the space previously reserved for it. Abuse append.
-	length := len(h2f.wbuf) - frameHeaderLen
-	if length >= (1 << 24) {
-		return errFrameTooLarge
-	}
-	_ = append(h2f.wbuf[:0],
-		byte(length>>16),
-		byte(length>>8),
-		byte(length))
-	if h2f.logWrites {
-		h2f.logWrite()
-	}
-
-	n, err := h2f.w.Write(h2f.wbuf)
-	if err == nil && n != len(h2f.wbuf) {
-		err = io.ErrShortWrite
-	}
-	return err
+	return nil
 }
 
-func (h2f *Framer) logWrite() {
-	if h2f.debugFramer == nil {
-		h2f.debugFramerBuf = new(bytes.Buffer)
-		h2f.debugFramer = NewFramer(nil, h2f.debugFramerBuf)
-		h2f.debugFramer.logReads = false // we log it ourselves, saying "wrote" below
-		// Let us read anything, even if we accidentally wrote it
-		// in the wrong order:
-		h2f.debugFramer.AllowIllegalReads = true
-	}
-	h2f.debugFramerBuf.Write(h2f.wbuf)
-	fr, err := h2f.debugFramer.ReadFrame()
-	if err != nil {
-		h2f.debugWriteLoggerf("http2: Framer %p: failed to decode just-written frame", h2f)
-		return
-	}
-	h2f.debugWriteLoggerf("http2: Framer %p: wrote %v", h2f, summarizeFrame(fr))
-}
+func (h2f *Framer) logWrite() { _ = "STUB: not implemented"; return }
 
-func (h2f *Framer) writeByte(v byte) { h2f.wbuf = append(h2f.wbuf, v) }
+// we log it ourselves, saying "wrote" below
+// Let us read anything, even if we accidentally wrote it
+// in the wrong order:
 
-func (h2f *Framer) writeBytes(v []byte) { h2f.wbuf = append(h2f.wbuf, v...) }
+func (h2f *Framer) writeByte(v byte) { _ = "STUB: not implemented"; return }
 
-func (h2f *Framer) writeUint16(v uint16) { h2f.wbuf = append(h2f.wbuf, byte(v>>8), byte(v)) }
+func (h2f *Framer) writeBytes(v []byte) { _ = "STUB: not implemented"; return }
 
-func (h2f *Framer) writeUint32(v uint32) {
-	h2f.wbuf = append(h2f.wbuf, byte(v>>24), byte(v>>16), byte(v>>8), byte(v))
-}
+func (h2f *Framer) writeUint16(v uint16) { _ = "STUB: not implemented"; return }
+
+func (h2f *Framer) writeUint32(v uint32) { _ = "STUB: not implemented"; return }
 
 const (
 	minMaxFrameSize = 1 << 14
@@ -416,56 +319,22 @@ const (
 // SetReuseFrames allows the Framer to reuse Frames.
 // If called on a Framer, Frames returned by calls to ReadFrame are only
 // valid until the next call to ReadFrame.
-func (h2f *Framer) SetReuseFrames() {
-	if h2f.frameCache != nil {
-		return
-	}
-	h2f.frameCache = &frameCache{}
-}
+func (h2f *Framer) SetReuseFrames() { _ = "STUB: not implemented"; return }
 
 type frameCache struct {
 	dataFrame DataFrame
 }
 
-func (fc *frameCache) getDataFrame() *DataFrame {
-	if fc == nil {
-		return &DataFrame{}
-	}
-	return &fc.dataFrame
-}
+func (fc *frameCache) getDataFrame() *DataFrame { _ = "STUB: not implemented"; return nil }
 
 // NewFramer returns a Framer that writes frames to w and reads them from r.
-func NewFramer(w io.Writer, r io.Reader) *Framer {
-	fr := &Framer{
-		w:                 w,
-		r:                 r,
-		countError:        func(string) {},
-		logReads:          logFrameReads,
-		logWrites:         logFrameWrites,
-		debugReadLoggerf:  log.Printf,
-		debugWriteLoggerf: log.Printf,
-	}
-	fr.getReadBuf = func(size uint32) []byte {
-		if cap(fr.readBuf) >= int(size) {
-			return fr.readBuf[:size]
-		}
-		fr.readBuf = make([]byte, size)
-		return fr.readBuf
-	}
-	fr.SetMaxReadFrameSize(maxFrameSize)
-	return fr
-}
+func NewFramer(w io.Writer, r io.Reader) *Framer { _ = "STUB: not implemented"; return nil }
 
 // SetMaxReadFrameSize sets the maximum size of a frame
 // that will be read by a subsequent call to ReadFrame.
 // It is the caller's responsibility to advertise this
 // limit with a SETTINGS frame.
-func (h2f *Framer) SetMaxReadFrameSize(v uint32) {
-	if v > maxFrameSize {
-		v = maxFrameSize
-	}
-	h2f.maxReadSize = v
-}
+func (h2f *Framer) SetMaxReadFrameSize(v uint32) { _ = "STUB: not implemented"; return }
 
 // ErrorDetail returns a more detailed error of the last error
 // returned by Framer.ReadFrame. For instance, if ReadFrame
@@ -474,9 +343,7 @@ func (h2f *Framer) SetMaxReadFrameSize(v uint32) {
 // to return a non-nil value and like the rest of the http2 package,
 // its return value is not protected by an API compatibility promise.
 // ErrorDetail is reset after the next call to ReadFrame.
-func (h2f *Framer) ErrorDetail() error {
-	return h2f.errDetail
-}
+func (h2f *Framer) ErrorDetail() error { _ = "STUB: not implemented"; return nil }
 
 // errFrameTooLarge is returned from Framer.ReadFrame when the peer
 // sends a frame that is larger than declared with SetMaxReadFrameSize.
@@ -484,34 +351,11 @@ var errFrameTooLarge = errors.New("http2: frame too large")
 
 // terminalReadFrameError reports whether err is an unrecoverable
 // error from ReadFrame and no other frames should be read.
-func terminalReadFrameError(err error) bool {
-	if _, ok := err.(StreamError); ok {
-		return false
-	}
-	return err != nil
-}
+func terminalReadFrameError(err error) bool { _ = "STUB: not implemented"; return false }
 
-func (h2f *Framer) streamByID(id uint32) *clientStream {
-	if h2f.cc == nil {
-		return nil
-	}
-	h2f.cc.mu.Lock()
-	defer h2f.cc.mu.Unlock()
-	cs := h2f.cc.streams[id]
-	if cs != nil && !cs.readAborted {
-		return cs
-	}
-	return nil
-}
+func (h2f *Framer) streamByID(id uint32) *clientStream { _ = "STUB: not implemented"; return nil }
 
-func (h2f *Framer) currentRequest(id uint32) *http.Request {
-	if cs := h2f.streamByID(id); cs != nil {
-		if req := cs.currentRequest; req != nil {
-			return req
-		}
-	}
-	return nil
-}
+func (h2f *Framer) currentRequest(id uint32) *http.Request { _ = "STUB: not implemented"; return nil }
 
 // ReadFrame reads a single frame. The returned Frame is only valid
 // until the next call to ReadFrame.
@@ -523,113 +367,21 @@ func (h2f *Framer) currentRequest(id uint32) *http.Request {
 //
 // If ReadFrame returns an error and a non-nil Frame, the Frame's StreamID
 // indicates the stream responsible for the error.
-func (h2f *Framer) ReadFrame() (Frame, error) {
-	h2f.errDetail = nil
-	if h2f.lastFrame != nil {
-		h2f.lastFrame.invalidate()
-	}
-	fh, err := readFrameHeader(h2f.headerBuf[:], h2f.r)
-	if err != nil {
-		return nil, err
-	}
-	if fh.Length > h2f.maxReadSize {
-		return nil, errFrameTooLarge
-	}
-	payload := h2f.getReadBuf(fh.Length)
-	if _, err := io.ReadFull(h2f.r, payload); err != nil {
-		return nil, err
-	}
-	f, err := typeFrameParser(fh.Type)(h2f.frameCache, fh, h2f.countError, payload)
-	if err != nil {
-		if ce, ok := err.(connError); ok {
-			return nil, h2f.connError(ce.Code, ce.Reason)
-		}
-		return nil, err
-	}
-	if err := h2f.checkFrameOrder(f); err != nil {
-		return nil, err
-	}
-	if h2f.logReads {
-		h2f.debugReadLoggerf("http2: Framer %p: read %v", h2f, summarizeFrame(f))
-	}
-	if fh.Type == FrameHeaders && h2f.ReadMetaHeaders != nil {
-		hf := f.(*HeadersFrame)
-		req := h2f.currentRequest(hf.StreamID)
-		var ctx context.Context
-		if req != nil {
-			ctx = req.Context()
-		}
-		var dumps []*dump.Dumper
-		if h2f.cc != nil {
-			dumps = dump.GetDumpers(ctx, h2f.cc.t.Dump)
-		}
-		if len(dumps) > 0 {
-			dd := []*dump.Dumper{}
-			for _, dump := range dumps {
-				if dump.ResponseHeader() {
-					dd = append(dd, dump)
-				}
-			}
-			dumps = dd
-		}
-		hr, err := h2f.readMetaFrame(hf, dumps)
-		if err == nil && len(dumps) > 0 {
-			for _, dump := range dumps {
-				dump.DumpResponseHeader([]byte("\r\n"))
-			}
-		}
-		return hr, err
-	}
-	return f, nil
-}
+func (h2f *Framer) ReadFrame() (Frame, error) { _ = "STUB: not implemented"; return *new(Frame), nil }
 
 // connError returns ConnectionError(code) but first
 // stashes away a public reason to the caller can optionally relay it
 // to the peer before hanging up on them. This might help others debug
 // their implementations.
 func (h2f *Framer) connError(code ErrCode, reason string) error {
-	h2f.errDetail = errors.New(reason)
-	return ConnectionError(code)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // checkFrameOrder reports an error if f is an invalid frame to return
 // next from ReadFrame. Mostly it checks whether HEADERS and
 // CONTINUATION frames are contiguous.
-func (h2f *Framer) checkFrameOrder(f Frame) error {
-	last := h2f.lastFrame
-	h2f.lastFrame = f
-	if h2f.AllowIllegalReads {
-		return nil
-	}
-
-	fh := f.Header()
-	if h2f.lastHeaderStream != 0 {
-		if fh.Type != FrameContinuation {
-			return h2f.connError(ErrCodeProtocol,
-				fmt.Sprintf("got %s for stream %d; expected CONTINUATION following %s for stream %d",
-					fh.Type, fh.StreamID,
-					last.Header().Type, h2f.lastHeaderStream))
-		}
-		if fh.StreamID != h2f.lastHeaderStream {
-			return h2f.connError(ErrCodeProtocol,
-				fmt.Sprintf("got CONTINUATION for stream %d; expected stream %d",
-					fh.StreamID, h2f.lastHeaderStream))
-		}
-	} else if fh.Type == FrameContinuation {
-		return h2f.connError(ErrCodeProtocol, fmt.Sprintf("unexpected CONTINUATION for stream %d", fh.StreamID))
-	}
-
-	switch fh.Type {
-	case FrameHeaders, FrameContinuation:
-		if fh.Flags.Has(FlagHeadersEndHeaders) {
-			h2f.lastHeaderStream = 0
-		} else {
-			h2f.lastHeaderStream = fh.StreamID
-		}
-	}
-
-	return nil
-}
+func (h2f *Framer) checkFrameOrder(f Frame) error { _ = "STUB: not implemented"; return nil }
 
 // A DataFrame conveys arbitrary, variable-length sequences of octets
 // associated with a stream.
@@ -639,52 +391,30 @@ type DataFrame struct {
 	data []byte
 }
 
-func (f *DataFrame) StreamEnded() bool {
-	return f.FrameHeader.Flags.Has(FlagDataEndStream)
-}
+func (f *DataFrame) StreamEnded() bool { _ = "STUB: not implemented"; return false }
 
 // Data returns the frame's data octets, not including any padding
 // size byte or padding suffix bytes.
 // The caller must not retain the returned memory past the next
 // call to ReadFrame.
-func (f *DataFrame) Data() []byte {
-	f.checkValid()
-	return f.data
-}
+func (f *DataFrame) Data() []byte { _ = "STUB: not implemented"; return nil }
 
 func parseDataFrame(fc *frameCache, fh FrameHeader, countError func(string), payload []byte) (Frame, error) {
-	if fh.StreamID == 0 {
-		// DATA frames MUST be associated with a stream. If a
-		// DATA frame is received whose stream identifier
-		// field is 0x0, the recipient MUST respond with a
-		// connection error (Section 5.4.1) of type
-		// PROTOCOL_ERROR.
-		countError("frame_data_stream_0")
-		return nil, connError{ErrCodeProtocol, "DATA frame with stream ID 0"}
-	}
-	f := fc.getDataFrame()
-	f.FrameHeader = fh
+	_ = "STUB: not implemented"
+	return *
 
-	var padSize byte
-	if fh.Flags.Has(FlagDataPadded) {
-		var err error
-		payload, padSize, err = readByte(payload)
-		if err != nil {
-			countError("frame_data_pad_byte_short")
-			return nil, err
-		}
-	}
-	if int(padSize) > len(payload) {
-		// If the length of the padding is greater than the
-		// length of the frame payload, the recipient MUST
-		// treat this as a connection error.
-		// Filed: https://github.com/http2/http2-spec/issues/610
-		countError("frame_data_pad_too_big")
-		return nil, connError{ErrCodeProtocol, "pad size larger than data payload"}
-	}
-	f.data = payload[:len(payload)-int(padSize)]
-	return f, nil
+	// DATA frames MUST be associated with a stream. If a
+	// DATA frame is received whose stream identifier
+	// field is 0x0, the recipient MUST respond with a
+	// connection error (Section 5.4.1) of type
+	// PROTOCOL_ERROR.
+	new(Frame), nil
 }
+
+// If the length of the padding is greater than the
+// length of the frame payload, the recipient MUST
+// treat this as a connection error.
+// Filed: https://github.com/http2/http2-spec/issues/610
 
 var (
 	errStreamID    = errors.New("invalid stream ID")
@@ -693,13 +423,9 @@ var (
 	errPadBytes    = errors.New("padding bytes must all be zeros unless AllowIllegalWrites is enabled")
 )
 
-func validStreamIDOrZero(streamID uint32) bool {
-	return streamID&(1<<31) == 0
-}
+func validStreamIDOrZero(streamID uint32) bool { _ = "STUB: not implemented"; return false }
 
-func validStreamID(streamID uint32) bool {
-	return streamID != 0 && streamID&(1<<31) == 0
-}
+func validStreamID(streamID uint32) bool { _ = "STUB: not implemented"; return false }
 
 // writeData writes a DATA frame.
 //
@@ -707,7 +433,8 @@ func validStreamID(streamID uint32) bool {
 // It is the caller's responsibility not to violate the maximum frame size
 // and to not call other Write methods concurrently.
 func (h2f *Framer) WriteData(streamID uint32, endStream bool, data []byte) error {
-	return h2f.WriteDataPadded(streamID, endStream, data, nil)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteDataPadded writes a DATA frame with optional padding.
@@ -720,46 +447,18 @@ func (h2f *Framer) WriteData(streamID uint32, endStream bool, data []byte) error
 // It is the caller's responsibility not to violate the maximum frame size
 // and to not call other Write methods concurrently.
 func (h2f *Framer) WriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
-	if err := h2f.startWriteDataPadded(streamID, endStream, data, pad); err != nil {
-		return err
-	}
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // startWriteDataPadded is WriteDataPadded, but only writes the frame to the Framer's internal buffer.
 // The caller should call endWrite to flush the frame to the underlying writer.
 func (h2f *Framer) startWriteDataPadded(streamID uint32, endStream bool, data, pad []byte) error {
-	if !validStreamID(streamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	if len(pad) > 0 {
-		if len(pad) > 255 {
-			return errPadLength
-		}
-		if !h2f.AllowIllegalWrites {
-			for _, b := range pad {
-				if b != 0 {
-					// "Padding octets MUST be set to zero when sending."
-					return errPadBytes
-				}
-			}
-		}
-	}
-	var flags Flags
-	if endStream {
-		flags |= FlagDataEndStream
-	}
-	if pad != nil {
-		flags |= FlagDataPadded
-	}
-	h2f.startWrite(FrameData, flags, streamID)
-	if pad != nil {
-		h2f.wbuf = append(h2f.wbuf, byte(len(pad)))
-	}
-	h2f.wbuf = append(h2f.wbuf, data...)
-	h2f.wbuf = append(h2f.wbuf, pad...)
+	_ = "STUB: not implemented"
 	return nil
 }
+
+// "Padding octets MUST be set to zero when sending."
 
 // A SettingsFrame conveys configuration parameters that affect how
 // endpoints communicate, such as preferences and constraints on peer
@@ -772,109 +471,61 @@ type SettingsFrame struct {
 }
 
 func parseSettingsFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	if fh.Flags.Has(FlagSettingsAck) && fh.Length > 0 {
-		// When this (ACK 0x1) bit is set, the payload of the
-		// SETTINGS frame MUST be empty. Receipt of a
-		// SETTINGS frame with the ACK flag set and a length
-		// field value other than 0 MUST be treated as a
-		// connection error (Section 5.4.1) of type
-		// FRAME_SIZE_ERROR.
-		countError("frame_settings_ack_with_length")
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	if fh.StreamID != 0 {
-		// SETTINGS frames always apply to a connection,
-		// never a single stream. The stream identifier for a
-		// SETTINGS frame MUST be zero (0x0).  If an endpoint
-		// receives a SETTINGS frame whose stream identifier
-		// field is anything other than 0x0, the endpoint MUST
-		// respond with a connection error (Section 5.4.1) of
-		// type PROTOCOL_ERROR.
-		countError("frame_settings_has_stream")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	if len(p)%6 != 0 {
-		countError("frame_settings_mod_6")
-		// Expecting even number of 6 byte settings.
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	f := &SettingsFrame{FrameHeader: fh, p: p}
-	if v, ok := f.Value(http2.SettingInitialWindowSize); ok && v > (1<<31)-1 {
-		countError("frame_settings_window_size_too_big")
-		// Values above the maximum flow control window size of 2^31 - 1 MUST
-		// be treated as a connection error (Section 5.4.1) of type
-		// FLOW_CONTROL_ERROR.
-		return nil, ConnectionError(ErrCodeFlowControl)
-	}
-	return f, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
-func (f *SettingsFrame) IsAck() bool {
-	return f.FrameHeader.Flags.Has(FlagSettingsAck)
-}
+// When this (ACK 0x1) bit is set, the payload of the
+// SETTINGS frame MUST be empty. Receipt of a
+// SETTINGS frame with the ACK flag set and a length
+// field value other than 0 MUST be treated as a
+// connection error (Section 5.4.1) of type
+// FRAME_SIZE_ERROR.
+
+// SETTINGS frames always apply to a connection,
+// never a single stream. The stream identifier for a
+// SETTINGS frame MUST be zero (0x0).  If an endpoint
+// receives a SETTINGS frame whose stream identifier
+// field is anything other than 0x0, the endpoint MUST
+// respond with a connection error (Section 5.4.1) of
+// type PROTOCOL_ERROR.
+
+// Expecting even number of 6 byte settings.
+
+// Values above the maximum flow control window size of 2^31 - 1 MUST
+// be treated as a connection error (Section 5.4.1) of type
+// FLOW_CONTROL_ERROR.
+
+func (f *SettingsFrame) IsAck() bool { _ = "STUB: not implemented"; return false }
 
 func (f *SettingsFrame) Value(id http2.SettingID) (v uint32, ok bool) {
-	f.checkValid()
-	for i := 0; i < f.NumSettings(); i++ {
-		if s := f.Setting(i); s.ID == id {
-			return s.Val, true
-		}
-	}
+	_ = "STUB: not implemented"
 	return 0, false
 }
 
 // Setting returns the setting from the frame at the given 0-based index.
 // The index must be >= 0 and less than f.NumSettings().
 func (f *SettingsFrame) Setting(i int) http2.Setting {
-	buf := f.p
-	return http2.Setting{
-		ID:  http2.SettingID(binary.BigEndian.Uint16(buf[i*6 : i*6+2])),
-		Val: binary.BigEndian.Uint32(buf[i*6+2 : i*6+6]),
-	}
+	_ = "STUB: not implemented"
+	return *new(http2.Setting)
 }
 
-func (f *SettingsFrame) NumSettings() int { return len(f.p) / 6 }
+func (f *SettingsFrame) NumSettings() int {
+	_ = "STUB: not implemented"
 
-// HasDuplicates reports whether f contains any duplicate setting IDs.
-func (f *SettingsFrame) HasDuplicates() bool {
-	num := f.NumSettings()
-	if num == 0 {
-		return false
-	}
-	// If it's small enough (the common case), just do the n^2
-	// thing and avoid a map allocation.
-	if num < 10 {
-		for i := 0; i < num; i++ {
-			idi := f.Setting(i).ID
-			for j := i + 1; j < num; j++ {
-				idj := f.Setting(j).ID
-				if idi == idj {
-					return true
-				}
-			}
-		}
-		return false
-	}
-	seen := map[http2.SettingID]bool{}
-	for i := 0; i < num; i++ {
-		id := f.Setting(i).ID
-		if seen[id] {
-			return true
-		}
-		seen[id] = true
-	}
-	return false
+	// HasDuplicates reports whether f contains any duplicate setting IDs.
+	return 0
 }
+
+func (f *SettingsFrame) HasDuplicates() bool { _ = "STUB: not implemented"; return false }
+
+// If it's small enough (the common case), just do the n^2
+// thing and avoid a map allocation.
 
 // ForeachSetting runs fn for each setting.
 // It stops and returns the first error.
 func (f *SettingsFrame) ForeachSetting(fn func(http2.Setting) error) error {
-	f.checkValid()
-	for i := 0; i < f.NumSettings(); i++ {
-		if err := fn(f.Setting(i)); err != nil {
-			return err
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
@@ -884,22 +535,15 @@ func (f *SettingsFrame) ForeachSetting(fn func(http2.Setting) error) error {
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
 func (h2f *Framer) WriteSettings(settings ...http2.Setting) error {
-	h2f.startWrite(FrameSettings, 0, 0)
-	for _, s := range settings {
-		h2f.writeUint16(uint16(s.ID))
-		h2f.writeUint32(s.Val)
-	}
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteSettingsAck writes an empty SETTINGS frame with the ACK bit set.
 //
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
-func (h2f *Framer) WriteSettingsAck() error {
-	h2f.startWrite(FrameSettings, FlagSettingsAck, 0)
-	return h2f.endWrite()
-}
+func (h2f *Framer) WriteSettingsAck() error { _ = "STUB: not implemented"; return nil }
 
 // A PingFrame is a mechanism for measuring a minimal round trip time
 // from the sender, as well as determining whether an idle connection
@@ -910,31 +554,14 @@ type PingFrame struct {
 	Data [8]byte
 }
 
-func (f *PingFrame) IsAck() bool { return f.Flags.Has(FlagPingAck) }
+func (f *PingFrame) IsAck() bool { _ = "STUB: not implemented"; return false }
 
 func parsePingFrame(_ *frameCache, fh FrameHeader, countError func(string), payload []byte) (Frame, error) {
-	if len(payload) != 8 {
-		countError("frame_ping_length")
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	if fh.StreamID != 0 {
-		countError("frame_ping_has_stream")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	f := &PingFrame{FrameHeader: fh}
-	copy(f.Data[:], payload)
-	return f, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
-func (h2f *Framer) WritePing(ack bool, data [8]byte) error {
-	var flags Flags
-	if ack {
-		flags = FlagPingAck
-	}
-	h2f.startWrite(FramePing, flags, 0)
-	h2f.writeBytes(data[:])
-	return h2f.endWrite()
-}
+func (h2f *Framer) WritePing(ack bool, data [8]byte) error { _ = "STUB: not implemented"; return nil }
 
 // A GoAwayFrame informs the remote peer to stop creating streams on this connection.
 // See https://httpwg.org/specs/rfc7540.html#rfc.section.6.8
@@ -949,34 +576,16 @@ type GoAwayFrame struct {
 // are not defined.
 // The caller must not retain the returned memory past the next
 // call to ReadFrame.
-func (f *GoAwayFrame) DebugData() []byte {
-	f.checkValid()
-	return f.debugData
-}
+func (f *GoAwayFrame) DebugData() []byte { _ = "STUB: not implemented"; return nil }
 
 func parseGoAwayFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	if fh.StreamID != 0 {
-		countError("frame_goaway_has_stream")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	if len(p) < 8 {
-		countError("frame_goaway_short")
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	return &GoAwayFrame{
-		FrameHeader:  fh,
-		LastStreamID: binary.BigEndian.Uint32(p[:4]) & (1<<31 - 1),
-		ErrCode:      ErrCode(binary.BigEndian.Uint32(p[4:8])),
-		debugData:    p[8:],
-	}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
 func (h2f *Framer) WriteGoAway(maxStreamID uint32, code ErrCode, debugData []byte) error {
-	h2f.startWrite(FrameGoAway, 0, 0)
-	h2f.writeUint32(maxStreamID & (1<<31 - 1))
-	h2f.writeUint32(uint32(code))
-	h2f.writeBytes(debugData)
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // An UnknownFrame is the frame type returned when the frame type is unknown
@@ -991,13 +600,11 @@ type UnknownFrame struct {
 // Framer.ReadFrame, nor is it valid to retain the returned slice.
 // The memory is owned by the Framer and is invalidated when the next
 // frame is read.
-func (f *UnknownFrame) Payload() []byte {
-	f.checkValid()
-	return f.p
-}
+func (f *UnknownFrame) Payload() []byte { _ = "STUB: not implemented"; return nil }
 
 func parseUnknownFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	return &UnknownFrame{fh, p}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
 // A WindowUpdateFrame is used to implement flow control.
@@ -1008,43 +615,27 @@ type WindowUpdateFrame struct {
 }
 
 func parseWindowUpdateFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	if len(p) != 4 {
-		countError("frame_windowupdate_bad_len")
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	inc := binary.BigEndian.Uint32(p[:4]) & 0x7fffffff // mask off high reserved bit
-	if inc == 0 {
-		// A receiver MUST treat the receipt of a
-		// WINDOW_UPDATE frame with an flow control window
-		// increment of 0 as a stream error (Section 5.4.2) of
-		// type PROTOCOL_ERROR; errors on the connection flow
-		// control window MUST be treated as a connection
-		// error (Section 5.4.1).
-		if fh.StreamID == 0 {
-			countError("frame_windowupdate_zero_inc_conn")
-			return nil, ConnectionError(ErrCodeProtocol)
-		}
-		countError("frame_windowupdate_zero_inc_stream")
-		return nil, streamError(fh.StreamID, ErrCodeProtocol)
-	}
-	return &WindowUpdateFrame{
-		FrameHeader: fh,
-		Increment:   inc,
-	}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
+
+// mask off high reserved bit
+
+// A receiver MUST treat the receipt of a
+// WINDOW_UPDATE frame with an flow control window
+// increment of 0 as a stream error (Section 5.4.2) of
+// type PROTOCOL_ERROR; errors on the connection flow
+// control window MUST be treated as a connection
+// error (Section 5.4.1).
 
 // WriteWindowUpdate writes a WINDOW_UPDATE frame.
 // The increment value must be between 1 and 2,147,483,647, inclusive.
 // If the Stream ID is zero, the window update applies to the
 // connection as a whole.
 func (h2f *Framer) WriteWindowUpdate(streamID, incr uint32) error {
+	_ = "STUB: not implemented"
 	// "The legal range for the increment to the flow control window is 1 to 2^31-1 (2,147,483,647) octets."
-	if (incr < 1 || incr > 2147483647) && !h2f.AllowIllegalWrites {
-		return errors.New("illegal window increment value")
-	}
-	h2f.startWrite(FrameWindowUpdate, 0, streamID)
-	h2f.writeUint32(incr)
-	return h2f.endWrite()
+	return nil
 }
 
 // A HeadersFrame is used to open a stream and additionally carries a
@@ -1058,64 +649,25 @@ type HeadersFrame struct {
 	headerFragBuf []byte // not owned
 }
 
-func (f *HeadersFrame) HeaderBlockFragment() []byte {
-	f.checkValid()
-	return f.headerFragBuf
-}
+func (f *HeadersFrame) HeaderBlockFragment() []byte { _ = "STUB: not implemented"; return nil }
 
-func (f *HeadersFrame) HeadersEnded() bool {
-	return f.FrameHeader.Flags.Has(FlagHeadersEndHeaders)
-}
+func (f *HeadersFrame) HeadersEnded() bool { _ = "STUB: not implemented"; return false }
 
-func (f *HeadersFrame) StreamEnded() bool {
-	return f.FrameHeader.Flags.Has(FlagHeadersEndStream)
-}
+func (f *HeadersFrame) StreamEnded() bool { _ = "STUB: not implemented"; return false }
 
-func (f *HeadersFrame) HasPriority() bool {
-	return f.FrameHeader.Flags.Has(FlagHeadersPriority)
-}
+func (f *HeadersFrame) HasPriority() bool { _ = "STUB: not implemented"; return false }
 
 func parseHeadersFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (_ Frame, err error) {
-	hf := &HeadersFrame{
-		FrameHeader: fh,
-	}
-	if fh.StreamID == 0 {
-		// HEADERS frames MUST be associated with a stream. If a HEADERS frame
-		// is received whose stream identifier field is 0x0, the recipient MUST
-		// respond with a connection error (Section 5.4.1) of type
-		// PROTOCOL_ERROR.
-		countError("frame_headers_zero_stream")
-		return nil, connError{ErrCodeProtocol, "HEADERS frame with stream ID 0"}
-	}
-	var padLength uint8
-	if fh.Flags.Has(FlagHeadersPadded) {
-		if p, padLength, err = readByte(p); err != nil {
-			countError("frame_headers_pad_short")
-			return
-		}
-	}
-	if fh.Flags.Has(FlagHeadersPriority) {
-		var v uint32
-		p, v, err = readUint32(p)
-		if err != nil {
-			countError("frame_headers_prio_short")
-			return nil, err
-		}
-		hf.Priority.StreamDep = v & 0x7fffffff
-		hf.Priority.Exclusive = (v != hf.Priority.StreamDep) // high bit was set
-		p, hf.Priority.Weight, err = readByte(p)
-		if err != nil {
-			countError("frame_headers_prio_weight_short")
-			return nil, err
-		}
-	}
-	if len(p)-int(padLength) < 0 {
-		countError("frame_headers_pad_too_big")
-		return nil, streamError(fh.StreamID, ErrCodeProtocol)
-	}
-	hf.headerFragBuf = p[:len(p)-int(padLength)]
-	return hf, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
+
+// HEADERS frames MUST be associated with a stream. If a HEADERS frame
+// is received whose stream identifier field is 0x0, the recipient MUST
+// respond with a connection error (Section 5.4.1) of type
+// PROTOCOL_ERROR.
+
+// high bit was set
 
 // HeadersFrameParam are the parameters for writing a HEADERS frame.
 type HeadersFrameParam struct {
@@ -1152,42 +704,7 @@ type HeadersFrameParam struct {
 //
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
-func (h2f *Framer) WriteHeaders(p HeadersFrameParam) error {
-	if !validStreamID(p.StreamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	var flags Flags
-	if p.PadLength != 0 {
-		flags |= FlagHeadersPadded
-	}
-	if p.EndStream {
-		flags |= FlagHeadersEndStream
-	}
-	if p.EndHeaders {
-		flags |= FlagHeadersEndHeaders
-	}
-	if !p.Priority.IsZero() {
-		flags |= FlagHeadersPriority
-	}
-	h2f.startWrite(FrameHeaders, flags, p.StreamID)
-	if p.PadLength != 0 {
-		h2f.writeByte(p.PadLength)
-	}
-	if !p.Priority.IsZero() {
-		v := p.Priority.StreamDep
-		if !validStreamIDOrZero(v) && !h2f.AllowIllegalWrites {
-			return errDepStreamID
-		}
-		if p.Priority.Exclusive {
-			v |= 1 << 31
-		}
-		h2f.writeUint32(v)
-		h2f.writeByte(p.Priority.Weight)
-	}
-	h2f.wbuf = append(h2f.wbuf, p.BlockFragment...)
-	h2f.wbuf = append(h2f.wbuf, padZeros[:p.PadLength]...)
-	return h2f.endWrite()
-}
+func (h2f *Framer) WriteHeaders(p HeadersFrameParam) error { _ = "STUB: not implemented"; return nil }
 
 // A PriorityFrame specifies the sender-advised priority of a stream.
 // See https://httpwg.org/specs/rfc7540.html#rfc.section.6.3
@@ -1197,45 +714,21 @@ type PriorityFrame struct {
 }
 
 func parsePriorityFrame(_ *frameCache, fh FrameHeader, countError func(string), payload []byte) (Frame, error) {
-	if fh.StreamID == 0 {
-		countError("frame_priority_zero_stream")
-		return nil, connError{ErrCodeProtocol, "PRIORITY frame with stream ID 0"}
-	}
-	if len(payload) != 5 {
-		countError("frame_priority_bad_length")
-		return nil, connError{ErrCodeFrameSize, fmt.Sprintf("PRIORITY frame payload size was %d; want 5", len(payload))}
-	}
-	v := binary.BigEndian.Uint32(payload[:4])
-	streamID := v & 0x7fffffff // mask off high bit
-	return &PriorityFrame{
-		FrameHeader: fh,
-		PriorityParam: http2.PriorityParam{
-			Weight:    payload[4],
-			StreamDep: streamID,
-			Exclusive: streamID != v, // was high bit set?
-		},
-	}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
+
+// mask off high bit
+
+// was high bit set?
 
 // WritePriority writes a PRIORITY frame.
 //
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
 func (h2f *Framer) WritePriority(streamID uint32, p http2.PriorityParam) error {
-	if !validStreamID(streamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	if !validStreamIDOrZero(p.StreamDep) {
-		return errDepStreamID
-	}
-	h2f.startWrite(FramePriority, 0, streamID)
-	v := p.StreamDep
-	if p.Exclusive {
-		v |= 1 << 31
-	}
-	h2f.writeUint32(v)
-	h2f.writeByte(p.Weight)
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // A RSTStreamFrame allows for abnormal termination of a stream.
@@ -1246,15 +739,8 @@ type RSTStreamFrame struct {
 }
 
 func parseRSTStreamFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	if len(p) != 4 {
-		countError("frame_rststream_bad_len")
-		return nil, ConnectionError(ErrCodeFrameSize)
-	}
-	if fh.StreamID == 0 {
-		countError("frame_rststream_zero_stream")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	return &RSTStreamFrame{fh, ErrCode(binary.BigEndian.Uint32(p[:4]))}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
 // WriteRSTStream writes a RST_STREAM frame.
@@ -1262,12 +748,8 @@ func parseRSTStreamFrame(_ *frameCache, fh FrameHeader, countError func(string),
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
 func (h2f *Framer) WriteRSTStream(streamID uint32, code ErrCode) error {
-	if !validStreamID(streamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	h2f.startWrite(FrameRSTStream, 0, streamID)
-	h2f.writeUint32(uint32(code))
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // A ContinuationFrame is used to continue a sequence of header block fragments.
@@ -1278,37 +760,21 @@ type ContinuationFrame struct {
 }
 
 func parseContinuationFrame(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (Frame, error) {
-	if fh.StreamID == 0 {
-		countError("frame_continuation_zero_stream")
-		return nil, connError{ErrCodeProtocol, "CONTINUATION frame with stream ID 0"}
-	}
-	return &ContinuationFrame{fh, p}, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
-func (f *ContinuationFrame) HeaderBlockFragment() []byte {
-	f.checkValid()
-	return f.headerFragBuf
-}
+func (f *ContinuationFrame) HeaderBlockFragment() []byte { _ = "STUB: not implemented"; return nil }
 
-func (f *ContinuationFrame) HeadersEnded() bool {
-	return f.FrameHeader.Flags.Has(FlagContinuationEndHeaders)
-}
+func (f *ContinuationFrame) HeadersEnded() bool { _ = "STUB: not implemented"; return false }
 
 // WriteContinuation writes a CONTINUATION frame.
 //
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
 func (h2f *Framer) WriteContinuation(streamID uint32, endHeaders bool, headerBlockFragment []byte) error {
-	if !validStreamID(streamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	var flags Flags
-	if endHeaders {
-		flags |= FlagContinuationEndHeaders
-	}
-	h2f.startWrite(FrameContinuation, flags, streamID)
-	h2f.wbuf = append(h2f.wbuf, headerBlockFragment...)
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // A PushPromiseFrame is used to initiate a server stream.
@@ -1319,54 +785,26 @@ type PushPromiseFrame struct {
 	headerFragBuf []byte // not owned
 }
 
-func (f *PushPromiseFrame) HeaderBlockFragment() []byte {
-	f.checkValid()
-	return f.headerFragBuf
-}
+func (f *PushPromiseFrame) HeaderBlockFragment() []byte { _ = "STUB: not implemented"; return nil }
 
-func (f *PushPromiseFrame) HeadersEnded() bool {
-	return f.FrameHeader.Flags.Has(FlagPushPromiseEndHeaders)
-}
+func (f *PushPromiseFrame) HeadersEnded() bool { _ = "STUB: not implemented"; return false }
 
 func parsePushPromise(_ *frameCache, fh FrameHeader, countError func(string), p []byte) (_ Frame, err error) {
-	pp := &PushPromiseFrame{
-		FrameHeader: fh,
-	}
-	if pp.StreamID == 0 {
-		// PUSH_PROMISE frames MUST be associated with an existing,
-		// peer-initiated stream. The stream identifier of a
-		// PUSH_PROMISE frame indicates the stream it is associated
-		// with. If the stream identifier field specifies the value
-		// 0x0, a recipient MUST respond with a connection error
-		// (Section 5.4.1) of type PROTOCOL_ERROR.
-		countError("frame_pushpromise_zero_stream")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	// The PUSH_PROMISE frame includes optional padding.
-	// Padding fields and flags are identical to those defined for DATA frames
-	var padLength uint8
-	if fh.Flags.Has(FlagPushPromisePadded) {
-		if p, padLength, err = readByte(p); err != nil {
-			countError("frame_pushpromise_pad_short")
-			return
-		}
-	}
-
-	p, pp.PromiseID, err = readUint32(p)
-	if err != nil {
-		countError("frame_pushpromise_promiseid_short")
-		return
-	}
-	pp.PromiseID = pp.PromiseID & (1<<31 - 1)
-
-	if int(padLength) > len(p) {
-		// like the DATA frame, error out if padding is longer than the body.
-		countError("frame_pushpromise_pad_too_big")
-		return nil, ConnectionError(ErrCodeProtocol)
-	}
-	pp.headerFragBuf = p[:len(p)-int(padLength)]
-	return pp, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
+
+// PUSH_PROMISE frames MUST be associated with an existing,
+// peer-initiated stream. The stream identifier of a
+// PUSH_PROMISE frame indicates the stream it is associated
+// with. If the stream identifier field specifies the value
+// 0x0, a recipient MUST respond with a connection error
+// (Section 5.4.1) of type PROTOCOL_ERROR.
+
+// The PUSH_PROMISE frame includes optional padding.
+// Padding fields and flags are identical to those defined for DATA frames
+
+// like the DATA frame, error out if padding is longer than the body.
 
 // PushPromiseParam are the parameters for writing a PUSH_PROMISE frame.
 type PushPromiseParam struct {
@@ -1398,49 +836,25 @@ type PushPromiseParam struct {
 // It will perform exactly one Write to the underlying Writer.
 // It is the caller's responsibility to not call other Write methods concurrently.
 func (h2f *Framer) WritePushPromise(p PushPromiseParam) error {
-	if !validStreamID(p.StreamID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	var flags Flags
-	if p.PadLength != 0 {
-		flags |= FlagPushPromisePadded
-	}
-	if p.EndHeaders {
-		flags |= FlagPushPromiseEndHeaders
-	}
-	h2f.startWrite(FramePushPromise, flags, p.StreamID)
-	if p.PadLength != 0 {
-		h2f.writeByte(p.PadLength)
-	}
-	if !validStreamID(p.PromiseID) && !h2f.AllowIllegalWrites {
-		return errStreamID
-	}
-	h2f.writeUint32(p.PromiseID)
-	h2f.wbuf = append(h2f.wbuf, p.BlockFragment...)
-	h2f.wbuf = append(h2f.wbuf, padZeros[:p.PadLength]...)
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // WriteRawFrame writes a raw frame. This can be used to write
 // extension frames unknown to this package.
 func (h2f *Framer) WriteRawFrame(t FrameType, flags Flags, streamID uint32, payload []byte) error {
-	h2f.startWrite(t, flags, streamID)
-	h2f.writeBytes(payload)
-	return h2f.endWrite()
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func readByte(p []byte) (remain []byte, b byte, err error) {
-	if len(p) == 0 {
-		return nil, 0, io.ErrUnexpectedEOF
-	}
-	return p[1:], p[0], nil
+	_ = "STUB: not implemented"
+	return nil, 0, nil
 }
 
 func readUint32(p []byte) (remain []byte, v uint32, err error) {
-	if len(p) < 4 {
-		return nil, 0, io.ErrUnexpectedEOF
-	}
-	return p[4:], binary.BigEndian.Uint32(p[:4]), nil
+	_ = "STUB: not implemented"
+	return nil, 0, nil
 }
 
 type streamEnder interface {
@@ -1485,252 +899,67 @@ type MetaHeadersFrame struct {
 
 // PseudoValue returns the given pseudo header field's value.
 // The provided pseudo field should not contain the leading colon.
-func (mh *MetaHeadersFrame) PseudoValue(pseudo string) string {
-	for _, hf := range mh.Fields {
-		if !hf.IsPseudo() {
-			return ""
-		}
-		if hf.Name[1:] == pseudo {
-			return hf.Value
-		}
-	}
-	return ""
-}
+func (mh *MetaHeadersFrame) PseudoValue(pseudo string) string { _ = "STUB: not implemented"; return "" }
 
 // RegularFields returns the regular (non-pseudo) header fields of mh.
 // The caller does not own the returned slice.
 func (mh *MetaHeadersFrame) RegularFields() []hpack.HeaderField {
-	for i, hf := range mh.Fields {
-		if !hf.IsPseudo() {
-			return mh.Fields[i:]
-		}
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
 // PseudoFields returns the pseudo header fields of mh.
 // The caller does not own the returned slice.
 func (mh *MetaHeadersFrame) PseudoFields() []hpack.HeaderField {
-	for i, hf := range mh.Fields {
-		if !hf.IsPseudo() {
-			return mh.Fields[:i]
-		}
-	}
-	return mh.Fields
-}
-
-func (mh *MetaHeadersFrame) checkPseudos() error {
-	var isRequest, isResponse bool
-	pf := mh.PseudoFields()
-	for i, hf := range pf {
-		switch hf.Name {
-		case ":method", ":path", ":scheme", ":authority":
-			isRequest = true
-		case ":status":
-			isResponse = true
-		default:
-			return pseudoHeaderError(hf.Name)
-		}
-		// Check for duplicates.
-		// This would be a bad algorithm, but N is 4.
-		// And this doesn't allocate.
-		for _, hf2 := range pf[:i] {
-			if hf.Name == hf2.Name {
-				return duplicatePseudoHeaderError(hf.Name)
-			}
-		}
-	}
-	if isRequest && isResponse {
-		return errMixPseudoHeaderTypes
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
-func (fr *Framer) maxHeaderStringLen() int {
-	v := int(fr.maxHeaderListSize())
-	if v < 0 {
-		// If maxHeaderListSize overflows an int, use no limit (0).
-		return 0
-	}
-	return v
-}
+func (mh *MetaHeadersFrame) checkPseudos() error { _ = "STUB: not implemented"; return nil }
+
+// Check for duplicates.
+// This would be a bad algorithm, but N is 4.
+// And this doesn't allocate.
+
+func (fr *Framer) maxHeaderStringLen() int { _ = "STUB: not implemented"; return 0 }
+
+// If maxHeaderListSize overflows an int, use no limit (0).
 
 // readMetaFrame returns 0 or more CONTINUATION frames from fr and
 // merge them into the provided hf and returns a MetaHeadersFrame
 // with the decoded hpack values.
 func (h2f *Framer) readMetaFrame(hf *HeadersFrame, dumps []*dump.Dumper) (Frame, error) {
-	if h2f.AllowIllegalReads {
-		return nil, errors.New("illegal use of AllowIllegalReads with ReadMetaHeaders")
-	}
-	mh := &MetaHeadersFrame{
-		HeadersFrame: hf,
-	}
-	remainSize := h2f.maxHeaderListSize()
-	var sawRegular bool
-
-	var invalid error // pseudo header field errors
-	hdec := h2f.ReadMetaHeaders
-	hdec.SetEmitEnabled(true)
-	hdec.SetMaxStringLength(h2f.maxHeaderStringLen())
-	rawEmitFunc := func(hf hpack.HeaderField) {
-		if VerboseLogs && h2f.logReads {
-			h2f.debugReadLoggerf("http2: decoded hpack field %+v", hf)
-		}
-		if !httpguts.ValidHeaderFieldValue(hf.Value) {
-			// Don't include the value in the error, because it may be sensitive.
-			invalid = headerFieldValueError(hf.Name)
-		}
-		isPseudo := strings.HasPrefix(hf.Name, ":")
-		if isPseudo {
-			if sawRegular {
-				invalid = errPseudoAfterRegular
-			}
-		} else {
-			sawRegular = true
-			if !validWireHeaderFieldName(hf.Name) {
-				invalid = headerFieldNameError(hf.Name)
-			}
-		}
-
-		if invalid != nil {
-			hdec.SetEmitEnabled(false)
-			return
-		}
-
-		size := hf.Size()
-		if size > remainSize {
-			hdec.SetEmitEnabled(false)
-			mh.Truncated = true
-			remainSize = 0
-			return
-		}
-		remainSize -= size
-
-		mh.Fields = append(mh.Fields, hf)
-	}
-	emitFunc := rawEmitFunc
-
-	ds := dump.Dumpers(dumps)
-	if ds.ShouldDump() {
-		emitFunc = func(hf hpack.HeaderField) {
-			ds.DumpResponseHeader([]byte(fmt.Sprintf("%s: %s\r\n", hf.Name, hf.Value)))
-			rawEmitFunc(hf)
-		}
-	}
-
-	hdec.SetEmitFunc(emitFunc)
-	// Lose reference to MetaHeadersFrame:
-	defer hdec.SetEmitFunc(func(hf hpack.HeaderField) {})
-
-	var hc headersOrContinuation = hf
-	for {
-		frag := hc.HeaderBlockFragment()
-
-		// Avoid parsing large amounts of headers that we will then discard.
-		// If the sender exceeds the max header list size by too much,
-		// skip parsing the fragment and close the connection.
-		//
-		// "Too much" is either any CONTINUATION frame after we've already
-		// exceeded the max header list size (in which case remainSize is 0),
-		// or a frame whose encoded size is more than twice the remaining
-		// header list bytes we're willing to accept.
-		if int64(len(frag)) > int64(2*remainSize) {
-			if VerboseLogs {
-				log.Printf("http2: header list too large")
-			}
-			// It would be nice to send a RST_STREAM before sending the GOAWAY,
-			// but the structure of the server's frame writer makes this difficult.
-			return mh, ConnectionError(ErrCodeProtocol)
-		}
-
-		// Also close the connection after any CONTINUATION frame following an
-		// invalid header, since we stop tracking the size of the headers after
-		// an invalid one.
-		if invalid != nil {
-			if VerboseLogs {
-				log.Printf("http2: invalid header: %v", invalid)
-			}
-			// It would be nice to send a RST_STREAM before sending the GOAWAY,
-			// but the structure of the server's frame writer makes this difficult.
-			return mh, ConnectionError(ErrCodeProtocol)
-		}
-
-		if _, err := hdec.Write(frag); err != nil {
-			return mh, ConnectionError(ErrCodeCompression)
-		}
-
-		if hc.HeadersEnded() {
-			break
-		}
-		if f, err := h2f.ReadFrame(); err != nil {
-			return nil, err
-		} else {
-			hc = f.(*ContinuationFrame) // guaranteed by checkFrameOrder
-		}
-	}
-
-	mh.HeadersFrame.headerFragBuf = nil
-	mh.HeadersFrame.invalidate()
-
-	if err := hdec.Close(); err != nil {
-		return mh, ConnectionError(ErrCodeCompression)
-	}
-	if invalid != nil {
-		h2f.errDetail = invalid
-		if VerboseLogs {
-			log.Printf("http2: invalid header: %v", invalid)
-		}
-		return nil, StreamError{mh.StreamID, ErrCodeProtocol, invalid}
-	}
-	if err := mh.checkPseudos(); err != nil {
-		h2f.errDetail = err
-		if VerboseLogs {
-			log.Printf("http2: invalid pseudo headers: %v", err)
-		}
-		return nil, StreamError{mh.StreamID, ErrCodeProtocol, err}
-	}
-	return mh, nil
+	_ = "STUB: not implemented"
+	return *new(Frame), nil
 }
 
-func summarizeFrame(f Frame) string {
-	var buf bytes.Buffer
-	f.Header().writeDebug(&buf)
-	switch f := f.(type) {
-	case *SettingsFrame:
-		n := 0
-		f.ForeachSetting(func(s http2.Setting) error {
-			n++
-			if n == 1 {
-				buf.WriteString(", settings:")
-			}
-			fmt.Fprintf(&buf, " %v=%v,", s.ID, s.Val)
-			return nil
-		})
-		if n > 0 {
-			buf.Truncate(buf.Len() - 1) // remove trailing comma
-		}
-	case *DataFrame:
-		data := f.Data()
-		const max = 256
-		if len(data) > max {
-			data = data[:max]
-		}
-		fmt.Fprintf(&buf, " data=%q", data)
-		if len(f.Data()) > max {
-			fmt.Fprintf(&buf, " (%d bytes omitted)", len(f.Data())-max)
-		}
-	case *WindowUpdateFrame:
-		if f.StreamID == 0 {
-			buf.WriteString(" (conn)")
-		}
-		fmt.Fprintf(&buf, " incr=%v", f.Increment)
-	case *PingFrame:
-		fmt.Fprintf(&buf, " ping=%q", f.Data[:])
-	case *GoAwayFrame:
-		fmt.Fprintf(&buf, " LastStreamID=%v ErrCode=%v Debug=%q",
-			f.LastStreamID, f.ErrCode, f.debugData)
-	case *RSTStreamFrame:
-		fmt.Fprintf(&buf, " ErrCode=%v", f.ErrCode)
-	}
-	return buf.String()
-}
+// pseudo header field errors
+
+// Don't include the value in the error, because it may be sensitive.
+
+// Lose reference to MetaHeadersFrame:
+
+// Avoid parsing large amounts of headers that we will then discard.
+// If the sender exceeds the max header list size by too much,
+// skip parsing the fragment and close the connection.
+//
+// "Too much" is either any CONTINUATION frame after we've already
+// exceeded the max header list size (in which case remainSize is 0),
+// or a frame whose encoded size is more than twice the remaining
+// header list bytes we're willing to accept.
+
+// It would be nice to send a RST_STREAM before sending the GOAWAY,
+// but the structure of the server's frame writer makes this difficult.
+
+// Also close the connection after any CONTINUATION frame following an
+// invalid header, since we stop tracking the size of the headers after
+// an invalid one.
+
+// It would be nice to send a RST_STREAM before sending the GOAWAY,
+// but the structure of the server's frame writer makes this difficult.
+
+// guaranteed by checkFrameOrder
+
+func summarizeFrame(f Frame) string { _ = "STUB: not implemented"; return "" }
+
+// remove trailing comma

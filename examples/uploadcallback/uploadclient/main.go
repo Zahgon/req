@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"time"
+
 	"github.com/imroc/req/v3"
 )
 
@@ -12,25 +13,9 @@ type SlowReader struct {
 	n    int
 }
 
-func (r *SlowReader) Close() error {
-	return nil
-}
+func (r *SlowReader) Close() error { _ = "STUB: not implemented"; return nil }
 
-func (r *SlowReader) Read(p []byte) (int, error) {
-	if r.n >= r.Size {
-		return 0, io.EOF
-	}
-	time.Sleep(1 * time.Millisecond)
-	n := len(p)
-	if r.n+n >= r.Size {
-		n = r.Size - r.n
-	}
-	for i := 0; i < n; i++ {
-		p[i] = 'h'
-	}
-	r.n += n
-	return n, nil
-}
+func (r *SlowReader) Read(p []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
 func main() {
 	size := 10 * 1024 * 1024

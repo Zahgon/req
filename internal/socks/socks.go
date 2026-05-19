@@ -11,25 +11,14 @@ package socks
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net"
-	"strconv"
 )
 
 // A Command represents a SOCKS command.
 type Command int
 
-func (cmd Command) String() string {
-	switch cmd {
-	case CmdConnect:
-		return "socks connect"
-	case cmdBind:
-		return "socks bind"
-	default:
-		return "socks " + strconv.Itoa(int(cmd))
-	}
-}
+func (cmd Command) String() string { _ = "STUB: not implemented"; return "" }
 
 // An AuthMethod represents a SOCKS authentication method.
 type AuthMethod int
@@ -37,30 +26,7 @@ type AuthMethod int
 // A Reply represents a SOCKS command reply code.
 type Reply int
 
-func (code Reply) String() string {
-	switch code {
-	case StatusSucceeded:
-		return "succeeded"
-	case 0x01:
-		return "general SOCKS server failure"
-	case 0x02:
-		return "connection not allowed by ruleset"
-	case 0x03:
-		return "network unreachable"
-	case 0x04:
-		return "host unreachable"
-	case 0x05:
-		return "connection refused"
-	case 0x06:
-		return "TTL expired"
-	case 0x07:
-		return "command not supported"
-	case 0x08:
-		return "address type not supported"
-	default:
-		return "unknown code: " + strconv.Itoa(int(code))
-	}
-}
+func (code Reply) String() string { _ = "STUB: not implemented"; return "" }
 
 // Wire protocol constants.
 const (
@@ -89,18 +55,9 @@ type Addr struct {
 }
 
 // Network return "socks"
-func (a *Addr) Network() string { return "socks" }
+func (a *Addr) Network() string { _ = "STUB: not implemented"; return "" }
 
-func (a *Addr) String() string {
-	if a == nil {
-		return "<nil>"
-	}
-	port := strconv.Itoa(a.Port)
-	if a.IP == nil {
-		return net.JoinHostPort(a.Name, port)
-	}
-	return net.JoinHostPort(a.IP.String(), port)
-}
+func (a *Addr) String() string { _ = "STUB: not implemented"; return "" }
 
 // A Conn represents a forward proxy connection.
 type Conn struct {
@@ -111,12 +68,7 @@ type Conn struct {
 
 // BoundAddr returns the address assigned by the proxy server for
 // connecting to the command target address from the proxy server.
-func (c *Conn) BoundAddr() net.Addr {
-	if c == nil {
-		return nil
-	}
-	return c.boundAddr
-}
+func (c *Conn) BoundAddr() net.Addr { _ = "STUB: not implemented"; return *new(net.Addr) }
 
 // A Dialer holds SOCKS-specific options.
 type Dialer struct {
@@ -150,33 +102,8 @@ type Dialer struct {
 // See func Dial of the net package of standard library for a
 // description of the network and address parameters.
 func (d *Dialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
-	if err := d.validateTarget(network, address); err != nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: err}
-	}
-	if ctx == nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: errors.New("nil context")}
-	}
-	var err error
-	var c net.Conn
-	if d.ProxyDial != nil {
-		c, err = d.ProxyDial(ctx, d.proxyNetwork, d.proxyAddress)
-	} else {
-		var dd net.Dialer
-		c, err = dd.DialContext(ctx, d.proxyNetwork, d.proxyAddress)
-	}
-	if err != nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: err}
-	}
-	a, err := d.connect(ctx, c, address)
-	if err != nil {
-		c.Close()
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: err}
-	}
-	return &Conn{Conn: c, boundAddr: a}, nil
+	_ = "STUB: not implemented"
+	return *new(net.Conn), nil
 }
 
 // DialWithConn initiates a connection from SOCKS server to the target
@@ -186,61 +113,23 @@ func (d *Dialer) DialContext(ctx context.Context, network, address string) (net.
 // It returns the connection's local address assigned by the SOCKS
 // server.
 func (d *Dialer) DialWithConn(ctx context.Context, c net.Conn, network, address string) (net.Addr, error) {
-	if err := d.validateTarget(network, address); err != nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: err}
-	}
-	if ctx == nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: errors.New("nil context")}
-	}
-	a, err := d.connect(ctx, c, address)
-	if err != nil {
-		proxy, dst, _ := d.pathAddrs(address)
-		return nil, &net.OpError{Op: d.cmd.String(), Net: network, Source: proxy, Addr: dst, Err: err}
-	}
-	return a, nil
+	_ = "STUB: not implemented"
+	return *new(net.Addr), nil
 }
 
 func (d *Dialer) validateTarget(network, address string) error {
-	switch network {
-	case "tcp", "tcp6", "tcp4":
-	default:
-		return errors.New("network not implemented")
-	}
-	switch d.cmd {
-	case CmdConnect, cmdBind:
-	default:
-		return errors.New("command not implemented")
-	}
+	_ = "STUB: not implemented"
 	return nil
 }
 
 func (d *Dialer) pathAddrs(address string) (proxy, dst net.Addr, err error) {
-	for i, s := range []string{d.proxyAddress, address} {
-		host, port, err := splitHostPort(s)
-		if err != nil {
-			return nil, nil, err
-		}
-		a := &Addr{Port: port}
-		a.IP = net.ParseIP(host)
-		if a.IP == nil {
-			a.Name = host
-		}
-		if i == 0 {
-			proxy = a
-		} else {
-			dst = a
-		}
-	}
-	return
+	_ = "STUB: not implemented"
+	return *new(net.Addr), *new(net.Addr), nil
 }
 
 // NewDialer returns a new Dialer that dials through the provided
 // proxy server's network and address.
-func NewDialer(network, address string) *Dialer {
-	return &Dialer{proxyNetwork: network, proxyAddress: address, cmd: CmdConnect}
-}
+func NewDialer(network, address string) *Dialer { _ = "STUB: not implemented"; return nil }
 
 const (
 	authUsernamePasswordVersion = 0x01
@@ -257,33 +146,9 @@ type UsernamePassword struct {
 // Authenticate authenticates a pair of username and password with the
 // proxy server.
 func (up *UsernamePassword) Authenticate(ctx context.Context, rw io.ReadWriter, auth AuthMethod) error {
-	switch auth {
-	case AuthMethodNotRequired:
-		return nil
-	case AuthMethodUsernamePassword:
-		if len(up.Username) == 0 || len(up.Username) > 255 || len(up.Password) == 0 || len(up.Password) > 255 {
-			return errors.New("invalid username/password")
-		}
-		b := []byte{authUsernamePasswordVersion}
-		b = append(b, byte(len(up.Username)))
-		b = append(b, up.Username...)
-		b = append(b, byte(len(up.Password)))
-		b = append(b, up.Password...)
-		// TODO(mikio): handle IO deadlines and cancellation if
-		// necessary
-		if _, err := rw.Write(b); err != nil {
-			return err
-		}
-		if _, err := io.ReadFull(rw, b[:2]); err != nil {
-			return err
-		}
-		if b[0] != authUsernamePasswordVersion {
-			return errors.New("invalid username/password version")
-		}
-		if b[1] != authStatusSucceeded {
-			return errors.New("username/password authentication failed")
-		}
-		return nil
-	}
-	return errors.New("unsupported authentication method " + strconv.Itoa(int(auth)))
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// TODO(mikio): handle IO deadlines and cancellation if
+// necessary

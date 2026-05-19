@@ -12,35 +12,15 @@ type ZstdReader struct {
 	zerr error         // sticky error
 }
 
-func NewZstdReader(body io.ReadCloser) *ZstdReader {
-	return &ZstdReader{Body: body}
-}
+func NewZstdReader(body io.ReadCloser) *ZstdReader { _ = "STUB: not implemented"; return nil }
 
-func (zr *ZstdReader) Read(p []byte) (n int, err error) {
-	if zr.zerr != nil {
-		return 0, zr.zerr
-	}
-	if zr.zr == nil {
-		zr.zr, err = zstd.NewReader(zr.Body)
-		if err != nil {
-			zr.zerr = err
-			return 0, err
-		}
-	}
-	return zr.zr.Read(p)
-}
+func (zr *ZstdReader) Read(p []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (zr *ZstdReader) Close() error {
-	if zr.zr != nil {
-		zr.zr.Close()
-	}
-	return zr.Body.Close()
-}
+func (zr *ZstdReader) Close() error { _ = "STUB: not implemented"; return nil }
 
 func (zr *ZstdReader) GetUnderlyingBody() io.ReadCloser {
-	return zr.Body
+	_ = "STUB: not implemented"
+	return *new(io.ReadCloser)
 }
 
-func (zr *ZstdReader) SetUnderlyingBody(body io.ReadCloser) {
-	zr.Body = body
-}
+func (zr *ZstdReader) SetUnderlyingBody(body io.ReadCloser) { _ = "STUB: not implemented"; return }

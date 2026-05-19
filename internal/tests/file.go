@@ -13,6 +13,4 @@ func init() {
 }
 
 // GetTestFilePath return test file absolute path.
-func GetTestFilePath(filename string) string {
-	return filepath.Join(testDataPath, filename)
-}
+func GetTestFilePath(filename string) string { _ = "STUB: not implemented"; return "" }

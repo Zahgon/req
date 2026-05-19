@@ -1,7 +1,5 @@
 package header
 
-import "strings"
-
 const (
 	DefaultUserAgent     = "req/v3 (https://github.com/imroc/req)"
 	UserAgent            = "User-Agent"
@@ -36,9 +34,4 @@ var reqWriteExcludeHeader = map[string]bool{
 	PseudoHeaderOderKey: true,
 }
 
-func IsExcluded(key string) bool {
-	if reqWriteExcludeHeader[strings.ToLower(key)] {
-		return true
-	}
-	return false
-}
+func IsExcluded(key string) bool { _ = "STUB: not implemented"; return false }

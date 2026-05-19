@@ -2,8 +2,6 @@ package http3
 
 import (
 	"context"
-	"errors"
-	"os"
 	"sync"
 
 	"github.com/quic-go/quic-go"
@@ -39,135 +37,45 @@ type streamClearer interface {
 }
 
 func newStateTrackingStream(s *quic.Stream, clearer streamClearer, sendDatagram func([]byte) error) *stateTrackingStream {
-	t := &stateTrackingStream{
-		Stream:       s,
-		clearer:      clearer,
-		sendDatagram: sendDatagram,
-		hasData:      make(chan struct{}, 1),
-	}
-
-	context.AfterFunc(s.Context(), func() {
-		t.closeSend(context.Cause(s.Context()))
-	})
-
-	return t
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (s *stateTrackingStream) closeSend(e error) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+func (s *stateTrackingStream) closeSend(e error) { _ = "STUB: not implemented"; return }
 
-	// clear the stream the first time both the send
-	// and receive are finished
-	if s.sendErr == nil {
-		if s.recvErr != nil {
-			s.clearer.clearStream(s.StreamID())
-		}
-		s.sendErr = e
-	}
-}
+// clear the stream the first time both the send
+// and receive are finished
 
-func (s *stateTrackingStream) closeReceive(e error) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
+func (s *stateTrackingStream) closeReceive(e error) { _ = "STUB: not implemented"; return }
 
-	// clear the stream the first time both the send
-	// and receive are finished
-	if s.recvErr == nil {
-		if s.sendErr != nil {
-			s.clearer.clearStream(s.StreamID())
-		}
-		s.recvErr = e
-		s.signalHasDatagram()
-	}
-}
+// clear the stream the first time both the send
+// and receive are finished
 
-func (s *stateTrackingStream) Close() error {
-	s.closeSend(errors.New("write on closed stream"))
-	return s.Stream.Close()
-}
+func (s *stateTrackingStream) Close() error { _ = "STUB: not implemented"; return nil }
 
 func (s *stateTrackingStream) CancelWrite(e quic.StreamErrorCode) {
-	s.closeSend(&quic.StreamError{StreamID: s.StreamID(), ErrorCode: e})
-	s.Stream.CancelWrite(e)
+	_ = "STUB: not implemented"
+	return
 }
 
 func (s *stateTrackingStream) Write(b []byte) (int, error) {
-	n, err := s.Stream.Write(b)
-	if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
-		s.closeSend(err)
-	}
-	return n, err
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
-func (s *stateTrackingStream) CancelRead(e quic.StreamErrorCode) {
-	s.closeReceive(&quic.StreamError{StreamID: s.StreamID(), ErrorCode: e})
-	s.Stream.CancelRead(e)
-}
+func (s *stateTrackingStream) CancelRead(e quic.StreamErrorCode) { _ = "STUB: not implemented"; return }
 
-func (s *stateTrackingStream) Read(b []byte) (int, error) {
-	n, err := s.Stream.Read(b)
-	if err != nil && !errors.Is(err, os.ErrDeadlineExceeded) {
-		s.closeReceive(err)
-	}
-	return n, err
-}
+func (s *stateTrackingStream) Read(b []byte) (int, error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (s *stateTrackingStream) SendDatagram(b []byte) error {
-	s.mx.Lock()
-	sendErr := s.sendErr
-	s.mx.Unlock()
-	if sendErr != nil {
-		return sendErr
-	}
+func (s *stateTrackingStream) SendDatagram(b []byte) error { _ = "STUB: not implemented"; return nil }
 
-	return s.sendDatagram(b)
-}
+func (s *stateTrackingStream) signalHasDatagram() { _ = "STUB: not implemented"; return }
 
-func (s *stateTrackingStream) signalHasDatagram() {
-	select {
-	case s.hasData <- struct{}{}:
-	default:
-	}
-}
-
-func (s *stateTrackingStream) enqueueDatagram(data []byte) {
-	s.mx.Lock()
-	defer s.mx.Unlock()
-
-	if s.recvErr != nil {
-		return
-	}
-	if len(s.queue) >= streamDatagramQueueLen {
-		return
-	}
-	s.queue = append(s.queue, data)
-	s.signalHasDatagram()
-}
+func (s *stateTrackingStream) enqueueDatagram(data []byte) { _ = "STUB: not implemented"; return }
 
 func (s *stateTrackingStream) ReceiveDatagram(ctx context.Context) ([]byte, error) {
-start:
-	s.mx.Lock()
-	if len(s.queue) > 0 {
-		data := s.queue[0]
-		s.queue = s.queue[1:]
-		s.mx.Unlock()
-		return data, nil
-	}
-	if receiveErr := s.recvErr; receiveErr != nil {
-		s.mx.Unlock()
-		return nil, receiveErr
-	}
-	s.mx.Unlock()
-
-	select {
-	case <-ctx.Done():
-		return nil, context.Cause(ctx)
-	case <-s.hasData:
-	}
-	goto start
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (s *stateTrackingStream) QUICStream() *quic.Stream {
-	return s.Stream
-}
+func (s *stateTrackingStream) QUICStream() *quic.Stream { _ = "STUB: not implemented"; return nil }

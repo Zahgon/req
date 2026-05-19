@@ -1,9 +1,9 @@
 package req
 
 import (
-	"github.com/imroc/req/v3/internal/dump"
 	"io"
-	"os"
+
+	"github.com/imroc/req/v3/internal/dump"
 )
 
 // DumpOptions controls the dump behavior.
@@ -23,105 +23,46 @@ type DumpOptions struct {
 }
 
 // Clone return a copy of DumpOptions
-func (do *DumpOptions) Clone() *DumpOptions {
-	if do == nil {
-		return nil
-	}
-	d := *do
-	return &d
-}
+func (do *DumpOptions) Clone() *DumpOptions { _ = "STUB: not implemented"; return nil }
 
 type dumpOptions struct {
 	*DumpOptions
 }
 
-func (o dumpOptions) Output() io.Writer {
-	if o.DumpOptions.Output == nil {
-		return os.Stdout
-	}
-	return o.DumpOptions.Output
-}
+func (o dumpOptions) Output() io.Writer { _ = "STUB: not implemented"; return *new(io.Writer) }
 
 func (o dumpOptions) RequestHeaderOutput() io.Writer {
-	if o.DumpOptions.RequestHeaderOutput != nil {
-		return o.DumpOptions.RequestHeaderOutput
-	}
-	if o.DumpOptions.RequestOutput != nil {
-		return o.DumpOptions.RequestOutput
-	}
-	return o.Output()
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
 func (o dumpOptions) RequestBodyOutput() io.Writer {
-	if o.DumpOptions.RequestBodyOutput != nil {
-		return o.DumpOptions.RequestBodyOutput
-	}
-	if o.DumpOptions.RequestOutput != nil {
-		return o.DumpOptions.RequestOutput
-	}
-	return o.Output()
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
 func (o dumpOptions) ResponseHeaderOutput() io.Writer {
-	if o.DumpOptions.ResponseHeaderOutput != nil {
-		return o.DumpOptions.ResponseHeaderOutput
-	}
-	if o.DumpOptions.ResponseOutput != nil {
-		return o.DumpOptions.ResponseOutput
-	}
-	return o.Output()
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
 func (o dumpOptions) ResponseBodyOutput() io.Writer {
-	if o.DumpOptions.ResponseBodyOutput != nil {
-		return o.DumpOptions.ResponseBodyOutput
-	}
-	if o.DumpOptions.ResponseOutput != nil {
-		return o.DumpOptions.ResponseOutput
-	}
-	return o.Output()
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
-func (o dumpOptions) RequestHeader() bool {
-	return o.DumpOptions.RequestHeader
-}
+func (o dumpOptions) RequestHeader() bool { _ = "STUB: not implemented"; return false }
 
-func (o dumpOptions) RequestBody() bool {
-	return o.DumpOptions.RequestBody
-}
+func (o dumpOptions) RequestBody() bool { _ = "STUB: not implemented"; return false }
 
-func (o dumpOptions) ResponseHeader() bool {
-	return o.DumpOptions.ResponseHeader
-}
+func (o dumpOptions) ResponseHeader() bool { _ = "STUB: not implemented"; return false }
 
-func (o dumpOptions) ResponseBody() bool {
-	return o.DumpOptions.ResponseBody
-}
+func (o dumpOptions) ResponseBody() bool { _ = "STUB: not implemented"; return false }
 
-func (o dumpOptions) Async() bool {
-	return o.DumpOptions.Async
-}
+func (o dumpOptions) Async() bool { _ = "STUB: not implemented"; return false }
 
-func (o dumpOptions) Clone() dump.Options {
-	return dumpOptions{o.DumpOptions.Clone()}
-}
+func (o dumpOptions) Clone() dump.Options { _ = "STUB: not implemented"; return *new(dump.Options) }
 
-func newDefaultDumpOptions() *DumpOptions {
-	return &DumpOptions{
-		Output:         os.Stdout,
-		RequestBody:    true,
-		ResponseBody:   true,
-		ResponseHeader: true,
-		RequestHeader:  true,
-	}
-}
+func newDefaultDumpOptions() *DumpOptions { _ = "STUB: not implemented"; return nil }
 
-func newDumper(opt *DumpOptions) *dump.Dumper {
-	if opt == nil {
-		opt = newDefaultDumpOptions()
-	}
-	if opt.Output == nil {
-		opt.Output = os.Stderr
-	}
-	return dump.NewDumper(dumpOptions{opt})
-}
+func newDumper(opt *DumpOptions) *dump.Dumper { _ = "STUB: not implemented"; return nil }

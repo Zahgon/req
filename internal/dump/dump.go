@@ -22,7 +22,8 @@ type Options interface {
 }
 
 func (d *Dumper) WrapResponseBodyReadCloser(rc io.ReadCloser) io.ReadCloser {
-	return &dumpResponseBodyReadCloser{rc, d}
+	_ = "STUB: not implemented"
+	return *new(io.ReadCloser)
 }
 
 type dumpResponseBodyReadCloser struct {
@@ -31,16 +32,13 @@ type dumpResponseBodyReadCloser struct {
 }
 
 func (r *dumpResponseBodyReadCloser) Read(p []byte) (n int, err error) {
-	n, err = r.ReadCloser.Read(p)
-	r.dump.DumpResponseBody(p[:n])
-	if err == io.EOF {
-		r.dump.DumpDefault([]byte("\r\n"))
-	}
-	return
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 func (d *Dumper) WrapRequestBodyWriteCloser(rc io.WriteCloser) io.WriteCloser {
-	return &dumpRequestBodyWriteCloser{rc, d}
+	_ = "STUB: not implemented"
+	return *new(io.WriteCloser)
 }
 
 type dumpRequestBodyWriteCloser struct {
@@ -49,9 +47,8 @@ type dumpRequestBodyWriteCloser struct {
 }
 
 func (w *dumpRequestBodyWriteCloser) Write(p []byte) (n int, err error) {
-	n, err = w.WriteCloser.Write(p)
-	w.dump.DumpRequestBody(p[:n])
-	return
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 type dumpRequestHeaderWriter struct {
@@ -60,16 +57,13 @@ type dumpRequestHeaderWriter struct {
 }
 
 func (w *dumpRequestHeaderWriter) Write(p []byte) (n int, err error) {
-	n, err = w.w.Write(p)
-	w.dump.DumpRequestHeader(p[:n])
-	return
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 func (d *Dumper) WrapRequestHeaderWriter(w io.Writer) io.Writer {
-	return &dumpRequestHeaderWriter{
-		w:    w,
-		dump: d,
-	}
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
 type dumpRequestBodyWriter struct {
@@ -78,43 +72,28 @@ type dumpRequestBodyWriter struct {
 }
 
 func (w *dumpRequestBodyWriter) Write(p []byte) (n int, err error) {
-	n, err = w.w.Write(p)
-	w.dump.DumpRequestBody(p[:n])
-	return
+	_ = "STUB: not implemented"
+	return 0, nil
 }
 
 func (d *Dumper) WrapRequestBodyWriter(w io.Writer) io.Writer {
-	return &dumpRequestBodyWriter{
-		w:    w,
-		dump: d,
-	}
+	_ = "STUB: not implemented"
+	return *new(io.Writer)
 }
 
 // GetResponseHeaderDumpers return Dumpers which need dump response header.
 func GetResponseHeaderDumpers(ctx context.Context, dump *Dumper) Dumpers {
-	dumpers := GetDumpers(ctx, dump)
-	var ds []*Dumper
-	for _, d := range dumpers {
-		if d.ResponseHeader() {
-			ds = append(ds, d)
-		}
-	}
-	return Dumpers(ds)
+	_ = "STUB: not implemented"
+	return *new(Dumpers)
 }
 
 // Dumpers is an array of Dumpper
 type Dumpers []*Dumper
 
 // ShouldDump is true if Dumper is not empty.
-func (ds Dumpers) ShouldDump() bool {
-	return len(ds) > 0
-}
+func (ds Dumpers) ShouldDump() bool { _ = "STUB: not implemented"; return false }
 
-func (ds Dumpers) DumpResponseHeader(p []byte) {
-	for _, d := range ds {
-		d.DumpResponseHeader(p)
-	}
-}
+func (ds Dumpers) DumpResponseHeader(p []byte) { _ = "STUB: not implemented"; return }
 
 // Dumper is the dump tool.
 type Dumper struct {
@@ -128,97 +107,35 @@ type dumpTask struct {
 }
 
 // NewDumper create a new Dumper.
-func NewDumper(opt Options) *Dumper {
-	d := &Dumper{
-		Options: opt,
-		ch:      make(chan *dumpTask, 20),
-	}
-	return d
-}
+func NewDumper(opt Options) *Dumper { _ = "STUB: not implemented"; return nil }
 
-func (d *Dumper) SetOptions(opt Options) {
-	d.Options = opt
-}
+func (d *Dumper) SetOptions(opt Options) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) Clone() *Dumper {
-	if d == nil {
-		return nil
-	}
-	return &Dumper{
-		Options: d.Options.Clone(),
-		ch:      make(chan *dumpTask, 20),
-	}
-}
+func (d *Dumper) Clone() *Dumper { _ = "STUB: not implemented"; return nil }
 
-func (d *Dumper) DumpTo(p []byte, output io.Writer) {
-	if len(p) == 0 || output == nil {
-		return
-	}
-	if d.Async() {
-		b := make([]byte, len(p))
-		copy(b, p)
-		d.ch <- &dumpTask{Data: b, Output: output}
-		return
-	}
-	output.Write(p)
-}
+func (d *Dumper) DumpTo(p []byte, output io.Writer) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) DumpDefault(p []byte) {
-	d.DumpTo(p, d.Output())
-}
+func (d *Dumper) DumpDefault(p []byte) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) DumpRequestHeader(p []byte) {
-	d.DumpTo(p, d.RequestHeaderOutput())
-}
+func (d *Dumper) DumpRequestHeader(p []byte) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) DumpRequestBody(p []byte) {
-	d.DumpTo(p, d.RequestBodyOutput())
-}
+func (d *Dumper) DumpRequestBody(p []byte) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) DumpResponseHeader(p []byte) {
-	d.DumpTo(p, d.ResponseHeaderOutput())
-}
+func (d *Dumper) DumpResponseHeader(p []byte) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) DumpResponseBody(p []byte) {
-	d.DumpTo(p, d.ResponseBodyOutput())
-}
+func (d *Dumper) DumpResponseBody(p []byte) { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) Stop() {
-	d.ch <- nil
-}
+func (d *Dumper) Stop() { _ = "STUB: not implemented"; return }
 
-func (d *Dumper) Start() {
-	for t := range d.ch {
-		if t == nil {
-			return
-		}
-		t.Output.Write(t.Data)
-	}
-}
+func (d *Dumper) Start() { _ = "STUB: not implemented"; return }
 
 type dumperKeyType int
 
 const DumperKey dumperKeyType = iota
 
-func GetDumpers(ctx context.Context, dump *Dumper) []*Dumper {
-	dumps := []*Dumper{}
-	if dump != nil {
-		dumps = append(dumps, dump)
-	}
-	if ctx == nil {
-		return dumps
-	}
-	if d, ok := ctx.Value(DumperKey).(*Dumper); ok {
-		dumps = append(dumps, d)
-	}
-	return dumps
-}
+func GetDumpers(ctx context.Context, dump *Dumper) []*Dumper { _ = "STUB: not implemented"; return nil }
 
 func WrapResponseBodyIfNeeded(res *http.Response, req *http.Request, dump *Dumper) {
-	dumps := GetDumpers(req.Context(), dump)
-	for _, d := range dumps {
-		if d.ResponseBody() {
-			res.Body = d.WrapResponseBodyReadCloser(res.Body)
-		}
-	}
+	_ = "STUB: not implemented"
+	return
 }

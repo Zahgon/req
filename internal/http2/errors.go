@@ -6,7 +6,6 @@ package http2
 
 import (
 	"errors"
-	"fmt"
 )
 
 // An ErrCode is an unsigned 32-bit error code as defined in the HTTP/2 spec.
@@ -46,27 +45,15 @@ var errCodeName = map[ErrCode]string{
 	ErrCodeHTTP11Required:     "HTTP_1_1_REQUIRED",
 }
 
-func (e ErrCode) String() string {
-	if s, ok := errCodeName[e]; ok {
-		return s
-	}
-	return fmt.Sprintf("unknown error code 0x%x", uint32(e))
-}
+func (e ErrCode) String() string { _ = "STUB: not implemented"; return "" }
 
-func (e ErrCode) stringToken() string {
-	if s, ok := errCodeName[e]; ok {
-		return s
-	}
-	return fmt.Sprintf("ERR_UNKNOWN_%d", uint32(e))
-}
+func (e ErrCode) stringToken() string { _ = "STUB: not implemented"; return "" }
 
 // ConnectionError is an error that results in the termination of the
 // entire connection.
 type ConnectionError ErrCode
 
-func (e ConnectionError) Error() string {
-	return fmt.Sprintf("connection error: %s", ErrCode(e))
-}
+func (e ConnectionError) Error() string { _ = "STUB: not implemented"; return "" }
 
 // StreamError is an error that only affects one stream within an
 // HTTP/2 connection.
@@ -82,15 +69,11 @@ type StreamError struct {
 var errFromPeer = errors.New("received from peer")
 
 func streamError(id uint32, code ErrCode) StreamError {
-	return StreamError{StreamID: id, Code: code}
+	_ = "STUB: not implemented"
+	return *new(StreamError)
 }
 
-func (e StreamError) Error() string {
-	if e.Cause != nil {
-		return fmt.Sprintf("stream error: stream ID %d; %v; %v", e.StreamID, e.Code, e.Cause)
-	}
-	return fmt.Sprintf("stream error: stream ID %d; %v", e.StreamID, e.Code)
-}
+func (e StreamError) Error() string { _ = "STUB: not implemented"; return "" }
 
 // connError represents an HTTP/2 ConnectionError error code, along
 // with a string (for debugging) explaining why.
@@ -104,33 +87,23 @@ type connError struct {
 	Reason string  // additional reason
 }
 
-func (e connError) Error() string {
-	return fmt.Sprintf("http2: connection error: %v: %v", e.Code, e.Reason)
-}
+func (e connError) Error() string { _ = "STUB: not implemented"; return "" }
 
 type pseudoHeaderError string
 
-func (e pseudoHeaderError) Error() string {
-	return fmt.Sprintf("invalid pseudo-header %q", string(e))
-}
+func (e pseudoHeaderError) Error() string { _ = "STUB: not implemented"; return "" }
 
 type duplicatePseudoHeaderError string
 
-func (e duplicatePseudoHeaderError) Error() string {
-	return fmt.Sprintf("duplicate pseudo-header %q", string(e))
-}
+func (e duplicatePseudoHeaderError) Error() string { _ = "STUB: not implemented"; return "" }
 
 type headerFieldNameError string
 
-func (e headerFieldNameError) Error() string {
-	return fmt.Sprintf("invalid header field name %q", string(e))
-}
+func (e headerFieldNameError) Error() string { _ = "STUB: not implemented"; return "" }
 
 type headerFieldValueError string
 
-func (e headerFieldValueError) Error() string {
-	return fmt.Sprintf("invalid header field value for %q", string(e))
-}
+func (e headerFieldValueError) Error() string { _ = "STUB: not implemented"; return "" }
 
 var (
 	errMixPseudoHeaderTypes = errors.New("mix of request and response pseudo headers")

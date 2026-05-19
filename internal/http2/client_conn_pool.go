@@ -6,7 +6,6 @@ package http2
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"sync"
@@ -40,52 +39,16 @@ type clientConnPool struct {
 }
 
 func (p *clientConnPool) GetClientConn(req *http.Request, addr string, dialOnMiss bool) (*ClientConn, error) {
+	_ = "STUB: not implemented"
 	// TODO(dneil): Dial a new connection when t.DisableKeepAlives is set?
-	if isConnectionCloseRequest(req) && dialOnMiss {
-		// It gets its own connection.
-		traceGetConn(req, addr)
-		const singleUse = true
-		cc, err := p.t.dialClientConn(req.Context(), addr, singleUse)
-		if err != nil {
-			return nil, err
-		}
-		return cc, nil
-	}
-	for {
-		p.mu.Lock()
-		for _, cc := range p.conns[addr] {
-			if cc.ReserveNewRequest() {
-				// When a connection is presented to us by the net/http package,
-				// the GetConn hook has already been called.
-				// Don't call it a second time here.
-				if !cc.getConnCalled {
-					traceGetConn(req, addr)
-				}
-				cc.getConnCalled = false
-				p.mu.Unlock()
-				return cc, nil
-			}
-		}
-		if !dialOnMiss {
-			p.mu.Unlock()
-			return nil, ErrNoCachedConn
-		}
-		traceGetConn(req, addr)
-		call := p.getStartDialLocked(req.Context(), addr)
-		p.mu.Unlock()
-		<-call.done
-		if shouldRetryDial(call, req) {
-			continue
-		}
-		cc, err := call.res, call.err
-		if err != nil {
-			return nil, err
-		}
-		if cc.ReserveNewRequest() {
-			return cc, nil
-		}
-	}
+	return nil, nil
 }
+
+// It gets its own connection.
+
+// When a connection is presented to us by the net/http package,
+// the GetConn hook has already been called.
+// Don't call it a second time here.
 
 // dialCall is an in-flight Transport dial call to a host.
 type dialCall struct {
@@ -101,33 +64,16 @@ type dialCall struct {
 
 // requires p.mu is held.
 func (p *clientConnPool) getStartDialLocked(ctx context.Context, addr string) *dialCall {
-	if call, ok := p.dialing[addr]; ok {
-		// A dial is already in-flight. Don't start another.
-		return call
-	}
-	call := &dialCall{p: p, done: make(chan struct{}), ctx: ctx}
-	if p.dialing == nil {
-		p.dialing = make(map[string]*dialCall)
-	}
-	p.dialing[addr] = call
-	go call.dial(call.ctx, addr)
-	return call
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// A dial is already in-flight. Don't start another.
 
 // run in its own goroutine.
-func (c *dialCall) dial(ctx context.Context, addr string) {
-	const singleUse = false // shared conn
-	c.res, c.err = c.p.t.dialClientConn(ctx, addr, singleUse)
+func (c *dialCall) dial(ctx context.Context, addr string) { _ = "STUB: not implemented"; return }
 
-	c.p.mu.Lock()
-	delete(c.p.dialing, addr)
-	if c.err == nil {
-		c.p.addConnLocked(addr, c.res)
-	}
-	c.p.mu.Unlock()
-
-	close(c.done)
-}
+// shared conn
 
 // addConnIfNeeded makes a NewClientConn out of c if a connection for key doesn't
 // already exist. It coalesces concurrent calls with the same key.
@@ -138,32 +84,8 @@ func (c *dialCall) dial(ctx context.Context, addr string) {
 // The return value used is whether c was used.
 // c is never closed.
 func (p *clientConnPool) AddConnIfNeeded(key string, t *Transport, c net.Conn) (used bool, err error) {
-	p.mu.Lock()
-	for _, cc := range p.conns[key] {
-		if cc.CanTakeNewRequest() {
-			p.mu.Unlock()
-			return false, nil
-		}
-	}
-	call, dup := p.addConnCalls[key]
-	if !dup {
-		if p.addConnCalls == nil {
-			p.addConnCalls = make(map[string]*addConnCall)
-		}
-		call = &addConnCall{
-			p:    p,
-			done: make(chan struct{}),
-		}
-		p.addConnCalls[key] = call
-		go call.run(t, key, c)
-	}
-	p.mu.Unlock()
-
-	<-call.done
-	if call.err != nil {
-		return false, call.err
-	}
-	return !dup, nil
+	_ = "STUB: not implemented"
+	return false, nil
 }
 
 type addConnCall struct {
@@ -173,109 +95,52 @@ type addConnCall struct {
 	err  error
 }
 
-func (c *addConnCall) run(t *Transport, key string, tc net.Conn) {
-	cc, err := t.NewClientConn(tc)
+func (c *addConnCall) run(t *Transport, key string, tc net.Conn) { _ = "STUB: not implemented"; return }
 
-	p := c.p
-	p.mu.Lock()
-	if err != nil {
-		c.err = err
-	} else {
-		cc.getConnCalled = true // already called by the net/http package
-		p.addConnLocked(key, cc)
-	}
-	delete(p.addConnCalls, key)
-	p.mu.Unlock()
-	close(c.done)
-}
+// already called by the net/http package
 
 // p.mu must be held
 func (p *clientConnPool) addConnLocked(key string, cc *ClientConn) {
-	for _, v := range p.conns[key] {
-		if v == cc {
-			return
-		}
-	}
-	if p.conns == nil {
-		p.conns = make(map[string][]*ClientConn)
-	}
-	if p.keys == nil {
-		p.keys = make(map[*ClientConn][]string)
-	}
-	p.conns[key] = append(p.conns[key], cc)
-	p.keys[cc] = append(p.keys[cc], key)
+	_ = "STUB: not implemented"
+	return
 }
 
-func (p *clientConnPool) MarkDead(cc *ClientConn) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	for _, key := range p.keys[cc] {
-		vv, ok := p.conns[key]
-		if !ok {
-			continue
-		}
-		newList := filterOutClientConn(vv, cc)
-		if len(newList) > 0 {
-			p.conns[key] = newList
-		} else {
-			delete(p.conns, key)
-		}
-	}
-	delete(p.keys, cc)
-}
+func (p *clientConnPool) MarkDead(cc *ClientConn) { _ = "STUB: not implemented"; return }
 
-func (p *clientConnPool) CloseIdleConnections() {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	// TODO: don't close a cc if it was just added to the pool
-	// milliseconds ago and has never been used. There's currently
-	// a small race window with the HTTP/1 Transport's integration
-	// where it can add an idle conn just before using it, and
-	// somebody else can concurrently call CloseIdleConns and
-	// break some caller's RoundTrip.
-	for _, vv := range p.conns {
-		for _, cc := range vv {
-			cc.closeIfIdle()
-		}
-	}
-}
+func (p *clientConnPool) CloseIdleConnections() { _ = "STUB: not implemented"; return }
+
+// TODO: don't close a cc if it was just added to the pool
+// milliseconds ago and has never been used. There's currently
+// a small race window with the HTTP/1 Transport's integration
+// where it can add an idle conn just before using it, and
+// somebody else can concurrently call CloseIdleConns and
+// break some caller's RoundTrip.
 
 func filterOutClientConn(in []*ClientConn, exclude *ClientConn) []*ClientConn {
-	out := in[:0]
-	for _, v := range in {
-		if v != exclude {
-			out = append(out, v)
-		}
-	}
-	// If we filtered it out, zero out the last item to prevent
-	// the GC from seeing it.
-	if len(in) != len(out) {
-		in[len(in)-1] = nil
-	}
-	return out
+	_ = "STUB: not implemented"
+	return nil
 }
+
+// If we filtered it out, zero out the last item to prevent
+// the GC from seeing it.
 
 // shouldRetryDial reports whether the current request should
 // retry dialing after the call finished unsuccessfully, for example
 // if the dial was canceled because of a context cancellation or
 // deadline expiry.
 func shouldRetryDial(call *dialCall, req *http.Request) bool {
-	if call.err == nil {
-		// No error, no need to retry
-		return false
-	}
-	if call.ctx == req.Context() {
-		// If the call has the same context as the request, the dial
-		// should not be retried, since any cancellation will have come
-		// from this request.
-		return false
-	}
-	if !errors.Is(call.err, context.Canceled) && !errors.Is(call.err, context.DeadlineExceeded) {
-		// If the call error is not because of a context cancellation or a deadline expiry,
-		// the dial should not be retried.
-		return false
-	}
-	// Only retry if the error is a context cancellation error or deadline expiry
-	// and the context associated with the call was canceled or expired.
-	return call.ctx.Err() != nil
+	_ = "STUB: not implemented"
+	return false
+
+	// No error, no need to retry
 }
+
+// If the call has the same context as the request, the dial
+// should not be retried, since any cancellation will have come
+// from this request.
+
+// If the call error is not because of a context cancellation or a deadline expiry,
+// the dial should not be retried.
+
+// Only retry if the error is a context cancellation error or deadline expiry
+// and the context associated with the call was canceled or expired.

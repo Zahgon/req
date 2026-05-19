@@ -1,64 +1,30 @@
 package util
 
 import (
-	"bytes"
-	"encoding/base64"
-	"os"
 	"reflect"
-	"strings"
 )
 
 // IsJSONType method is to check JSON content type or not
-func IsJSONType(ct string) bool {
-	return strings.Contains(ct, "json")
-}
+func IsJSONType(ct string) bool { _ = "STUB: not implemented"; return false }
 
 // IsXMLType method is to check XML content type or not
-func IsXMLType(ct string) bool {
-	return strings.Contains(ct, "xml")
-}
+func IsXMLType(ct string) bool { _ = "STUB: not implemented"; return false }
 
 // GetPointer return the pointer of the interface.
-func GetPointer(v any) any {
-	t := reflect.TypeOf(v)
-	if t.Kind() == reflect.Ptr {
-		if tt := t.Elem(); tt.Kind() == reflect.Ptr { // pointer of pointer
-			if tt.Elem().Kind() == reflect.Ptr {
-				panic("pointer of pointer of pointer is not supported")
-			}
-			el := reflect.ValueOf(v).Elem()
-			if el.IsZero() {
-				vv := reflect.New(tt.Elem())
-				el.Set(vv)
-				return vv.Interface()
-			} else {
-				return el.Interface()
-			}
-		} else {
-			if reflect.ValueOf(v).IsZero() {
-				vv := reflect.New(t.Elem())
-				return vv.Interface()
-			}
-			return v
-		}
-	}
-	return reflect.New(t).Interface()
-}
+func GetPointer(v any) any { _ = "STUB: not implemented"; return *new(any) }
+
+// pointer of pointer
 
 // GetType return the underlying type.
-func GetType(v any) reflect.Type {
-	return reflect.Indirect(reflect.ValueOf(v)).Type()
-}
+func GetType(v any) reflect.Type { _ = "STUB: not implemented"; return *new(reflect.Type) }
 
 // CutString slices s around the first instance of sep,
 // returning the text before and after sep.
 // The found result reports whether sep appears in s.
 // If sep does not appear in s, cut returns s, "", false.
 func CutString(s, sep string) (before, after string, found bool) {
-	if i := strings.Index(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, "", false
+	_ = "STUB: not implemented"
+	return "", "", false
 }
 
 // CutBytes slices s around the first instance of sep,
@@ -68,40 +34,22 @@ func CutString(s, sep string) (before, after string, found bool) {
 //
 // CutBytes returns slices of the original slice s, not copies.
 func CutBytes(s, sep []byte) (before, after []byte, found bool) {
-	if i := bytes.Index(s, sep); i >= 0 {
-		return s[:i], s[i+len(sep):], true
-	}
-	return s, nil, false
+	_ = "STUB: not implemented"
+	return nil, nil, false
 }
 
 // IsStringEmpty method tells whether given string is empty or not
-func IsStringEmpty(str string) bool {
-	return len(strings.TrimSpace(str)) == 0
-}
+func IsStringEmpty(str string) bool { _ = "STUB: not implemented"; return false }
 
 // See 2 (end of page 4) https://www.ietf.org/rfc/rfc2617.txt
 // "To receive authorization, the client sends the userid and password,
 // separated by a single colon (":") character, within a base64
 // encoded string in the credentials."
 // It is not meant to be urlencoded.
-func basicAuth(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
-}
+func basicAuth(username, password string) string { _ = "STUB: not implemented"; return "" }
 
 // BasicAuthHeaderValue return the header of basic auth.
-func BasicAuthHeaderValue(username, password string) string {
-	return "Basic " + basicAuth(username, password)
-}
+func BasicAuthHeaderValue(username, password string) string { _ = "STUB: not implemented"; return "" }
 
 // CreateDirectory create the directory.
-func CreateDirectory(dir string) (err error) {
-	if _, err = os.Stat(dir); err != nil {
-		if os.IsNotExist(err) {
-			if err = os.MkdirAll(dir, 0755); err != nil {
-				return
-			}
-		}
-	}
-	return
-}
+func CreateDirectory(dir string) (err error) { _ = "STUB: not implemented"; return nil }

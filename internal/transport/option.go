@@ -168,14 +168,4 @@ type Options struct {
 	Dump *dump.Dumper
 }
 
-func (o Options) Clone() Options {
-	oo := o
-	if o.TLSClientConfig != nil {
-		oo.TLSClientConfig = o.TLSClientConfig.Clone()
-	}
-	if o.Dump != nil {
-		oo.Dump = o.Dump.Clone()
-		go oo.Dump.Start()
-	}
-	return oo
-}
+func (o Options) Clone() Options { _ = "STUB: not implemented"; return *new(Options) }

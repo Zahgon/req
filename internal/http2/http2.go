@@ -9,12 +9,8 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
-	"sort"
-	"strconv"
 	"strings"
 	"sync"
-
-	"golang.org/x/net/http/httpguts"
 )
 
 var (
@@ -62,30 +58,9 @@ var clientPreface = []byte(ClientPreface)
 //	characters that are compared in a case-insensitive
 //	fashion. However, header field names MUST be converted to
 //	lowercase prior to their encoding in HTTP/2. "
-func validWireHeaderFieldName(v string) bool {
-	if len(v) == 0 {
-		return false
-	}
-	for _, r := range v {
-		if !httpguts.IsTokenRune(r) {
-			return false
-		}
-		if 'A' <= r && r <= 'Z' {
-			return false
-		}
-	}
-	return true
-}
+func validWireHeaderFieldName(v string) bool { _ = "STUB: not implemented"; return false }
 
-func httpCodeString(code int) string {
-	switch code {
-	case 200:
-		return "200"
-	case 404:
-		return "404"
-	}
-	return strconv.Itoa(code)
-}
+func httpCodeString(code int) string { _ = "STUB: not implemented"; return "" }
 
 // bufWriterPoolBufferSize is the size of bufio.Writer's
 // buffers created using bufWriterPool.
@@ -101,26 +76,11 @@ var bufWriterPool = sync.Pool{
 	},
 }
 
-func mustUint31(v int32) uint32 {
-	if v < 0 || v > 2147483647 {
-		panic("out of range")
-	}
-	return uint32(v)
-}
+func mustUint31(v int32) uint32 { _ = "STUB: not implemented"; return 0 }
 
 // bodyAllowedForStatus reports whether a given response status code
 // permits a body. See RFC 7230, section 3.3.
-func bodyAllowedForStatus(status int) bool {
-	switch {
-	case status >= 100 && status <= 199:
-		return false
-	case status == 204:
-		return false
-	case status == 304:
-		return false
-	}
-	return true
-}
+func bodyAllowedForStatus(status int) bool { _ = "STUB: not implemented"; return false }
 
 type httpError struct {
 	_       incomparable
@@ -128,11 +88,11 @@ type httpError struct {
 	timeout bool
 }
 
-func (e *httpError) Error() string { return e.msg }
+func (e *httpError) Error() string { _ = "STUB: not implemented"; return "" }
 
-func (e *httpError) Timeout() bool { return e.timeout }
+func (e *httpError) Timeout() bool { _ = "STUB: not implemented"; return false }
 
-func (e *httpError) Temporary() bool { return true }
+func (e *httpError) Temporary() bool { _ = "STUB: not implemented"; return false }
 
 var errH2Timeout error = &httpError{msg: "http2: timeout awaiting response headers", timeout: true}
 
@@ -146,33 +106,23 @@ type sorter struct {
 	v []string // owned by sorter
 }
 
-func (s *sorter) Len() int { return len(s.v) }
+func (s *sorter) Len() int { _ = "STUB: not implemented"; return 0 }
 
-func (s *sorter) Swap(i, j int) { s.v[i], s.v[j] = s.v[j], s.v[i] }
+func (s *sorter) Swap(i, j int) { _ = "STUB: not implemented"; return }
 
-func (s *sorter) Less(i, j int) bool { return s.v[i] < s.v[j] }
+func (s *sorter) Less(i, j int) bool { _ = "STUB: not implemented"; return false }
 
 // Keys returns the sorted keys of h.
 //
 // The returned slice is only valid until s used again or returned to
 // its pool.
-func (s *sorter) Keys(h http.Header) []string {
-	keys := s.v[:0]
-	for k := range h {
-		keys = append(keys, k)
-	}
-	s.v = keys
-	sort.Sort(s)
-	return keys
-}
+func (s *sorter) Keys(h http.Header) []string { _ = "STUB: not implemented"; return nil }
 
 func (s *sorter) SortStrings(ss []string) {
+	_ = "STUB: not implemented"
 	// Our sorter works on s.v, which sorter owns, so
 	// stash it away while we sort the user's buffer.
-	save := s.v
-	s.v = ss
-	sort.Sort(s)
-	s.v = save
+	return
 }
 
 // validPseudoPath reports whether v is a valid :path pseudo-header
@@ -188,9 +138,7 @@ func (s *sorter) SortStrings(ss []string) {
 // We used to enforce that the path also didn't start with "//", but
 // Google's GFE accepts such paths and Chrome sends them, so ignore
 // that part of the spec. See golang.org/issue/19103.
-func validPseudoPath(v string) bool {
-	return (len(v) > 0 && v[0] == '/') || v == "*"
-}
+func validPseudoPath(v string) bool { _ = "STUB: not implemented"; return false }
 
 // incomparable is a zero-width, non-comparable type. Adding it to a struct
 // makes that struct also non-comparable, and generally doesn't add

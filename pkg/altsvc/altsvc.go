@@ -13,38 +13,13 @@ type AltSvcJar struct {
 }
 
 // NewAltSvcJar create a AltSvcJar which implements Jar.
-func NewAltSvcJar() *AltSvcJar {
-	return &AltSvcJar{
-		entries: make(map[string]*AltSvc),
-	}
-}
+func NewAltSvcJar() *AltSvcJar { _ = "STUB: not implemented"; return nil }
 
-func (j *AltSvcJar) GetAltSvc(addr string) *AltSvc {
-	if addr == "" {
-		return nil
-	}
-	as, ok := j.entries[addr]
-	if !ok {
-		return nil
-	}
-	now := time.Now()
-	j.mu.Lock()
-	defer j.mu.Unlock()
-	if as.Expire.Before(now) { // expired
-		delete(j.entries, addr)
-		return nil
-	}
-	return as
-}
+func (j *AltSvcJar) GetAltSvc(addr string) *AltSvc { _ = "STUB: not implemented"; return nil }
 
-func (j *AltSvcJar) SetAltSvc(addr string, as *AltSvc) {
-	if addr == "" {
-		return
-	}
-	j.mu.Lock()
-	defer j.mu.Unlock()
-	j.entries[addr] = as
-}
+// expired
+
+func (j *AltSvcJar) SetAltSvc(addr string, as *AltSvc) { _ = "STUB: not implemented"; return }
 
 // AltSvc is the parsed alt-svc.
 type AltSvc struct {

@@ -1,55 +1,16 @@
 package req
 
 import (
-	"crypto/rand"
-	"encoding/binary"
-	"math/big"
-	"strconv"
-	"strings"
-
 	"github.com/imroc/req/v3/http2"
-	utls "github.com/refraction-networking/utls"
 )
 
 // Identical for both Blink-based browsers (Chrome, Chromium, etc.) and WebKit-based browsers (Safari, etc.)
 // Blink implementation: https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/platform/network/form_data_encoder.cc;drc=1d694679493c7b2f7b9df00e967b4f8699321093;l=130
 // WebKit implementation: https://github.com/WebKit/WebKit/blob/47eea119fe9462721e5cc75527a4280c6d5f5214/Source/WebCore/platform/network/FormDataBuilder.cpp#L120
-func webkitMultipartBoundaryFunc() string {
-	const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789AB"
-
-	sb := strings.Builder{}
-	sb.WriteString("----WebKitFormBoundary")
-
-	for i := 0; i < 16; i++ {
-		index, err := rand.Int(rand.Reader, big.NewInt(int64(len(letters)-1)))
-		if err != nil {
-			panic(err)
-		}
-
-		sb.WriteByte(letters[index.Int64()])
-	}
-
-	return sb.String()
-}
+func webkitMultipartBoundaryFunc() string { _ = "STUB: not implemented"; return "" }
 
 // Firefox implementation: https://searchfox.org/mozilla-central/source/dom/html/HTMLFormSubmission.cpp#355
-func firefoxMultipartBoundaryFunc() string {
-	sb := strings.Builder{}
-	sb.WriteString("-------------------------")
-
-	for i := 0; i < 3; i++ {
-		var b [8]byte
-		if _, err := rand.Read(b[:]); err != nil {
-			panic(err)
-		}
-		u32 := binary.LittleEndian.Uint32(b[:])
-		s := strconv.FormatUint(uint64(u32), 10)
-
-		sb.WriteString(s)
-	}
-
-	return sb.String()
-}
+func firefoxMultipartBoundaryFunc() string { _ = "STUB: not implemented"; return "" }
 
 var (
 	chromeHttp2Settings = []http2.Setting{
@@ -126,18 +87,7 @@ var (
 )
 
 // ImpersonateChrome impersonates Chrome browser (version 120).
-func (c *Client) ImpersonateChrome() *Client {
-	c.
-		SetTLSFingerprint(utls.HelloChrome_120).
-		SetHTTP2SettingsFrame(chromeHttp2Settings...).
-		SetHTTP2ConnectionFlow(15663105).
-		SetCommonPseudoHeaderOder(chromePseudoHeaderOrder...).
-		SetCommonHeaderOrder(chromeHeaderOrder...).
-		SetCommonHeaders(chromeHeaders).
-		SetHTTP2HeaderPriority(chromeHeaderPriority).
-		SetMultipartBoundaryFunc(webkitMultipartBoundaryFunc)
-	return c
-}
+func (c *Client) ImpersonateChrome() *Client { _ = "STUB: not implemented"; return nil }
 
 var (
 	firefoxHttp2Settings = []http2.Setting{
@@ -248,19 +198,7 @@ var (
 )
 
 // ImpersonateFirefox impersonates Firefox browser (version 120).
-func (c *Client) ImpersonateFirefox() *Client {
-	c.
-		SetTLSFingerprint(utls.HelloFirefox_120).
-		SetHTTP2SettingsFrame(firefoxHttp2Settings...).
-		SetHTTP2ConnectionFlow(12517377).
-		SetHTTP2PriorityFrames(firefoxPriorityFrames...).
-		SetCommonPseudoHeaderOder(firefoxPseudoHeaderOrder...).
-		SetCommonHeaderOrder(firefoxHeaderOrder...).
-		SetCommonHeaders(firefoxHeaders).
-		SetHTTP2HeaderPriority(firefoxHeaderPriority).
-		SetMultipartBoundaryFunc(firefoxMultipartBoundaryFunc)
-	return c
-}
+func (c *Client) ImpersonateFirefox() *Client { _ = "STUB: not implemented"; return nil }
 
 var (
 	safariHttp2Settings = []http2.Setting{
@@ -310,15 +248,4 @@ var (
 )
 
 // ImpersonateSafari impersonates Safari browser (version 16.6).
-func (c *Client) ImpersonateSafari() *Client {
-	c.
-		SetTLSFingerprint(utls.HelloSafari_16_0).
-		SetHTTP2SettingsFrame(safariHttp2Settings...).
-		SetHTTP2ConnectionFlow(10485760).
-		SetCommonPseudoHeaderOder(safariPseudoHeaderOrder...).
-		SetCommonHeaderOrder(safariHeaderOrder...).
-		SetCommonHeaders(safariHeaders).
-		SetHTTP2HeaderPriority(safariHeaderPriority).
-		SetMultipartBoundaryFunc(webkitMultipartBoundaryFunc)
-	return c
-}
+func (c *Client) ImpersonateSafari() *Client { _ = "STUB: not implemented"; return nil }

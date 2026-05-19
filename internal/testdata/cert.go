@@ -3,6 +3,7 @@ package testdata
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"os"
 	"path"
 	"runtime"
 )

@@ -1,13 +1,8 @@
 package req
 
 import (
-	"io"
 	"net/http"
-	"strings"
 	"time"
-
-	"github.com/imroc/req/v3/internal/header"
-	"github.com/imroc/req/v3/internal/util"
 )
 
 // Response is the http response.
@@ -31,64 +26,34 @@ type Response struct {
 // state check logic.
 //
 // Deprecated: Use IsSuccessState instead.
-func (r *Response) IsSuccess() bool {
-	return r.IsSuccessState()
-}
+func (r *Response) IsSuccess() bool { _ = "STUB: not implemented"; return false }
 
 // IsSuccessState method returns true if no error occurs and HTTP status `code >= 200 and <= 299`
 // by default, you can also use Client.SetResultStateCheckFunc to customize the result state
 // check logic.
-func (r *Response) IsSuccessState() bool {
-	if r.Response == nil {
-		return false
-	}
-	return r.ResultState() == SuccessState
-}
+func (r *Response) IsSuccessState() bool { _ = "STUB: not implemented"; return false }
 
 // IsError method returns true if no error occurs and HTTP status `code >= 400`
 // by default, you can also use Client.SetResultStateCheckFunc to customize the result
 // state check logic.
 //
 // Deprecated: Use IsErrorState instead.
-func (r *Response) IsError() bool {
-	return r.IsErrorState()
-}
+func (r *Response) IsError() bool { _ = "STUB: not implemented"; return false }
 
 // IsErrorState method returns true if no error occurs and HTTP status `code >= 400`
 // by default, you can also use Client.SetResultStateCheckFunc to customize the result
 // state check logic.
-func (r *Response) IsErrorState() bool {
-	if r.Response == nil {
-		return false
-	}
-	return r.ResultState() == ErrorState
-}
+func (r *Response) IsErrorState() bool { _ = "STUB: not implemented"; return false }
 
 // GetContentType return the `Content-Type` header value.
-func (r *Response) GetContentType() string {
-	if r.Response == nil {
-		return ""
-	}
-	return r.Header.Get(header.ContentType)
-}
+func (r *Response) GetContentType() string { _ = "STUB: not implemented"; return "" }
 
 // ResultState returns the result state.
 // By default, it returns SuccessState if HTTP status `code >= 200 && code <= 299`, and returns
 // ErrorState if HTTP status `code >= 400`, otherwise returns UnknownState.
 // You can also use Client.SetResultStateCheckFunc to customize the result
 // state check logic.
-func (r *Response) ResultState() ResultState {
-	if r.Response == nil {
-		return UnknownState
-	}
-	var resultStateCheckFunc func(resp *Response) ResultState
-	if r.Request.client.resultStateCheckFunc != nil {
-		resultStateCheckFunc = r.Request.client.resultStateCheckFunc
-	} else {
-		resultStateCheckFunc = defaultResultStateChecker
-	}
-	return resultStateCheckFunc(r)
-}
+func (r *Response) ResultState() ResultState { _ = "STUB: not implemented"; return *new(ResultState) }
 
 // Result returns the automatically unmarshalled object if Request.SetSuccessResult
 // is called and ResultState returns SuccessState.
@@ -96,115 +61,75 @@ func (r *Response) ResultState() ResultState {
 //
 // Deprecated: Use SuccessResult instead.
 func (r *Response) Result() any {
-	return r.SuccessResult()
+	_ = "STUB: not implemented"
+	return *
+
+	// SuccessResult returns the automatically unmarshalled object if Request.SetSuccessResult
+	// is called and ResultState returns SuccessState.
+	// Otherwise, return nil.
+	new(any)
 }
 
-// SuccessResult returns the automatically unmarshalled object if Request.SetSuccessResult
-// is called and ResultState returns SuccessState.
-// Otherwise, return nil.
 func (r *Response) SuccessResult() any {
-	return r.result
+	_ = "STUB: not implemented"
+
+	// Error returns the automatically unmarshalled object when Request.SetErrorResult
+	// or Client.SetCommonErrorResult is called, and ResultState returns ErrorState.
+	// Otherwise, return nil.
+	//
+	// Deprecated: Use ErrorResult instead.
+	return *new(any)
 }
 
-// Error returns the automatically unmarshalled object when Request.SetErrorResult
-// or Client.SetCommonErrorResult is called, and ResultState returns ErrorState.
-// Otherwise, return nil.
-//
-// Deprecated: Use ErrorResult instead.
 func (r *Response) Error() any {
-	return r.error
+	_ = "STUB: not implemented"
+
+	// ErrorResult returns the automatically unmarshalled object when Request.SetErrorResult
+	// or Client.SetCommonErrorResult is called, and ResultState returns ErrorState.
+	// Otherwise, return nil.
+	return *new(any)
 }
 
-// ErrorResult returns the automatically unmarshalled object when Request.SetErrorResult
-// or Client.SetCommonErrorResult is called, and ResultState returns ErrorState.
-// Otherwise, return nil.
 func (r *Response) ErrorResult() any {
-	return r.error
+	_ = "STUB: not implemented"
+
+	// TraceInfo returns the TraceInfo from Request.
+	return *new(any)
 }
 
-// TraceInfo returns the TraceInfo from Request.
-func (r *Response) TraceInfo() TraceInfo {
-	return r.Request.TraceInfo()
-}
+func (r *Response) TraceInfo() TraceInfo { _ = "STUB: not implemented"; return *new(TraceInfo) }
 
 // TotalTime returns the total time of the request, from request we sent to response we received.
-func (r *Response) TotalTime() time.Duration {
-	if r.Request.trace != nil {
-		return r.Request.TraceInfo().TotalTime
-	}
-	if !r.receivedAt.IsZero() {
-		return r.receivedAt.Sub(r.Request.StartTime)
-	}
-	return r.Request.responseReturnTime.Sub(r.Request.StartTime)
-}
+func (r *Response) TotalTime() time.Duration { _ = "STUB: not implemented"; return *new(time.Duration) }
 
 // ReceivedAt returns the timestamp that response we received.
-func (r *Response) ReceivedAt() time.Time {
-	return r.receivedAt
-}
+func (r *Response) ReceivedAt() time.Time { _ = "STUB: not implemented"; return *new(time.Time) }
 
-func (r *Response) setReceivedAt() {
-	r.receivedAt = time.Now()
-	if r.Request.trace != nil {
-		r.Request.trace.endTime = r.receivedAt
-	}
-}
+func (r *Response) setReceivedAt() { _ = "STUB: not implemented"; return }
 
 // UnmarshalJson unmarshalls JSON response body into the specified object.
-func (r *Response) UnmarshalJson(v any) error {
-	if r.Err != nil {
-		return r.Err
-	}
-	b, err := r.ToBytes()
-	if err != nil {
-		return err
-	}
-	return r.Request.client.jsonUnmarshal(b, v)
-}
+func (r *Response) UnmarshalJson(v any) error { _ = "STUB: not implemented"; return nil }
 
 // UnmarshalXml unmarshalls XML response body into the specified object.
-func (r *Response) UnmarshalXml(v any) error {
-	if r.Err != nil {
-		return r.Err
-	}
-	b, err := r.ToBytes()
-	if err != nil {
-		return err
-	}
-	return r.Request.client.xmlUnmarshal(b, v)
-}
+func (r *Response) UnmarshalXml(v any) error { _ = "STUB: not implemented"; return nil }
 
 // Unmarshal unmarshalls response body into the specified object according
 // to response `Content-Type`.
-func (r *Response) Unmarshal(v any) error {
-	if r.Err != nil {
-		return r.Err
-	}
-	v = util.GetPointer(v)
-	contentType := r.Header.Get("Content-Type")
-	if strings.Contains(contentType, "json") {
-		return r.UnmarshalJson(v)
-	} else if strings.Contains(contentType, "xml") {
-		return r.UnmarshalXml(v)
-	}
-	return r.UnmarshalJson(v)
-}
+func (r *Response) Unmarshal(v any) error { _ = "STUB: not implemented"; return nil }
 
 // Into unmarshalls response body into the specified object according
 // to response `Content-Type`.
-func (r *Response) Into(v any) error {
-	return r.Unmarshal(v)
-}
+func (r *Response) Into(v any) error { _ = "STUB: not implemented"; return nil }
 
 // Set response body with byte array content
 func (r *Response) SetBody(body []byte) {
-	r.body = body
+	_ = "STUB: not implemented"
+
+	// Set response body with string content
+	return
 }
 
-// Set response body with string content
-func (r *Response) SetBodyString(body string) {
-	r.body = []byte(body)
-}
+func (r *Response) SetBodyString(body string) { _ = "STUB: not implemented"; return }
 
 // Bytes return the response body as []bytes that have already been read, could be
 // nil if not read, the following cases are already read:
@@ -212,92 +137,39 @@ func (r *Response) SetBodyString(body string) {
 //  2. `Client.DisableAutoReadResponse` and `Request.DisableAutoReadResponse` is not
 //     called, and also `Request.SetOutput` and `Request.SetOutputFile` is not called.
 func (r *Response) Bytes() []byte {
-	return r.body
+	_ = "STUB: not implemented"
+
+	// String returns the response body as string that have already been read, could be
+	// nil if not read, the following cases are already read:
+	//  1. `Request.SetResult` or `Request.SetError` is called.
+	//  2. `Client.DisableAutoReadResponse` and `Request.DisableAutoReadResponse` is not
+	//     called, and also `Request.SetOutput` and `Request.SetOutputFile` is not called.
+	return nil
 }
 
-// String returns the response body as string that have already been read, could be
-// nil if not read, the following cases are already read:
-//  1. `Request.SetResult` or `Request.SetError` is called.
-//  2. `Client.DisableAutoReadResponse` and `Request.DisableAutoReadResponse` is not
-//     called, and also `Request.SetOutput` and `Request.SetOutputFile` is not called.
-func (r *Response) String() string {
-	return string(r.body)
-}
+func (r *Response) String() string { _ = "STUB: not implemented"; return "" }
 
 // ToString returns the response body as string, read body if not have been read.
-func (r *Response) ToString() (string, error) {
-	b, err := r.ToBytes()
-	return string(b), err
-}
+func (r *Response) ToString() (string, error) { _ = "STUB: not implemented"; return "", nil }
 
 // ToBytes returns the response body as []byte, read body if not have been read.
-func (r *Response) ToBytes() (body []byte, err error) {
-	if r.Err != nil {
-		return nil, r.Err
-	}
-	if r.body != nil {
-		return r.body, nil
-	}
-	if r.Response == nil || r.Response.Body == nil {
-		return []byte{}, nil
-	}
-	defer func() {
-		r.Body.Close()
-		if err != nil {
-			r.Err = err
-		}
-		r.body = body
-	}()
-	body, err = io.ReadAll(r.Body)
-	r.setReceivedAt()
-	if err == nil && r.Request.client.responseBodyTransformer != nil {
-		body, err = r.Request.client.responseBodyTransformer(body, r.Request, r)
-	}
-	return
-}
+func (r *Response) ToBytes() (body []byte, err error) { _ = "STUB: not implemented"; return nil, nil }
 
 // Dump return the string content that have been dumped for the request.
 // `Request.Dump` or `Request.DumpXXX` MUST have been called.
-func (r *Response) Dump() string {
-	return r.Request.getDumpBuffer().String()
-}
+func (r *Response) Dump() string { _ = "STUB: not implemented"; return "" }
 
 // GetStatus returns the response status.
-func (r *Response) GetStatus() string {
-	if r.Response == nil {
-		return ""
-	}
-	return r.Status
-}
+func (r *Response) GetStatus() string { _ = "STUB: not implemented"; return "" }
 
 // GetStatusCode returns the response status code.
-func (r *Response) GetStatusCode() int {
-	if r.Response == nil {
-		return 0
-	}
-	return r.StatusCode
-}
+func (r *Response) GetStatusCode() int { _ = "STUB: not implemented"; return 0 }
 
 // GetHeader returns the response header value by key.
-func (r *Response) GetHeader(key string) string {
-	if r.Response == nil {
-		return ""
-	}
-	return r.Header.Get(key)
-}
+func (r *Response) GetHeader(key string) string { _ = "STUB: not implemented"; return "" }
 
 // GetHeaderValues returns the response header values by key.
-func (r *Response) GetHeaderValues(key string) []string {
-	if r.Response == nil {
-		return nil
-	}
-	return r.Header.Values(key)
-}
+func (r *Response) GetHeaderValues(key string) []string { _ = "STUB: not implemented"; return nil }
 
 // HeaderToString get all header as string.
-func (r *Response) HeaderToString() string {
-	if r.Response == nil {
-		return ""
-	}
-	return convertHeaderToString(r.Header)
-}
+func (r *Response) HeaderToString() string { _ = "STUB: not implemented"; return "" }

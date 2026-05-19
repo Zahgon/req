@@ -18,19 +18,6 @@ import (
 // Like the RoundTripper interface, the error types returned
 // by RoundTrip are unspecified.
 func (t *Transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	if t.wrappedRoundTrip != nil {
-		resp, err = t.wrappedRoundTrip.RoundTrip(req)
-	} else {
-		resp, err = t.roundTrip(req)
-	}
-	if err != nil {
-		return
-	}
-	if resp.ProtoMajor != 3 && t.altSvcJar != nil {
-		if v := resp.Header.Get("alt-svc"); v != "" {
-			t.handleAltSvc(req, v)
-		}
-	}
-	t.handleResponseBody(resp, req)
-	return
+	_ = "STUB: not implemented"
+	return nil, nil
 }

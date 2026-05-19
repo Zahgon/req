@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/imroc/req/v3"
 )
@@ -47,51 +46,15 @@ type ErrorMessage struct {
 	Message string `json:"message"`
 }
 
-func (msg *ErrorMessage) Error() string {
-	return fmt.Sprintf("API Error: %s", msg.Message)
-}
+func (msg *ErrorMessage) Error() string { _ = "STUB: not implemented"; return "" }
 
 func findTheMostPopularRepo(username string) (repo string, star int, err error) {
-	var popularRepo Repo
-	var resp *req.Response
-
-	for page := 1; ; page++ {
-		repos := []*Repo{}
-		resp, err = req.SetHeader("Accept", "application/vnd.github.v3+json").
-			SetQueryParams(map[string]string{
-				"type":      "owner",
-				"page":      strconv.Itoa(page),
-				"per_page":  "100",
-				"sort":      "updated",
-				"direction": "desc",
-			}).
-			SetPathParam("username", username).
-			SetSuccessResult(&repos).
-			Get("https://api.github.com/users/{username}/repos")
-
-		fmt.Println("TraceInfo:")
-		fmt.Println("----------")
-		fmt.Println(resp.TraceInfo())
-		fmt.Println()
-
-		if err != nil {
-			return
-		}
-
-		if !resp.IsSuccessState() { //  HTTP status `code >= 200 and <= 299` is considered as success by default
-			return
-		}
-		for _, repo := range repos {
-			if repo.Star >= popularRepo.Star {
-				popularRepo = *repo
-			}
-		}
-		if len(repo) == 100 { // Try Next page
-			continue
-		}
-		// All repos have been traversed, return the final result
-		repo = popularRepo.Name
-		star = popularRepo.Star
-		return
-	}
+	_ = "STUB: not implemented"
+	return "", 0, nil
 }
+
+//  HTTP status `code >= 200 and <= 299` is considered as success by default
+
+// Try Next page
+
+// All repos have been traversed, return the final result

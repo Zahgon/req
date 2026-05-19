@@ -2,8 +2,6 @@ package compress
 
 import (
 	"io"
-
-	"github.com/andybalholm/brotli"
 )
 
 type BrotliReader struct {
@@ -12,28 +10,15 @@ type BrotliReader struct {
 	berr error         // sticky error
 }
 
-func NewBrotliReader(body io.ReadCloser) *BrotliReader {
-	return &BrotliReader{Body: body}
-}
+func NewBrotliReader(body io.ReadCloser) *BrotliReader { _ = "STUB: not implemented"; return nil }
 
-func (br *BrotliReader) Read(p []byte) (n int, err error) {
-	if br.berr != nil {
-		return 0, br.berr
-	}
-	if br.br == nil {
-		br.br = brotli.NewReader(br.Body)
-	}
-	return br.br.Read(p)
-}
+func (br *BrotliReader) Read(p []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
 
-func (br *BrotliReader) Close() error {
-	return br.Body.Close()
-}
+func (br *BrotliReader) Close() error { _ = "STUB: not implemented"; return nil }
 
 func (br *BrotliReader) GetUnderlyingBody() io.ReadCloser {
-	return br.Body
+	_ = "STUB: not implemented"
+	return *new(io.ReadCloser)
 }
 
-func (br *BrotliReader) SetUnderlyingBody(body io.ReadCloser) {
-	br.Body = body
-}
+func (br *BrotliReader) SetUnderlyingBody(body io.ReadCloser) { _ = "STUB: not implemented"; return }

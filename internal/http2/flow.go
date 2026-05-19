@@ -30,49 +30,22 @@ func (f *inflow) init(n int32) {
 // It returns the number of bytes to send in a WINDOW_UPDATE frame to the peer.
 // Window updates are accumulated and sent when the unsent capacity
 // is at least inflowMinRefresh or will at least double the peer's available window.
-func (f *inflow) add(n int) (connAdd int32) {
-	if n < 0 {
-		panic("negative update")
-	}
-	unsent := int64(f.unsent) + int64(n)
-	// "A sender MUST NOT allow a flow-control window to exceed 2^31-1 octets."
-	// RFC 7540 Section 6.9.1.
-	const maxWindow = 1<<31 - 1
-	if unsent+int64(f.avail) > maxWindow {
-		panic("flow control update exceeds maximum window size")
-	}
-	f.unsent = int32(unsent)
-	if f.unsent < inflowMinRefresh && f.unsent < f.avail {
-		// If there aren't at least inflowMinRefresh bytes of window to send,
-		// and this update won't at least double the window, buffer the update for later.
-		return 0
-	}
-	f.avail += f.unsent
-	f.unsent = 0
-	return int32(unsent)
-}
+func (f *inflow) add(n int) (connAdd int32) { _ = "STUB: not implemented"; return 0 }
+
+// "A sender MUST NOT allow a flow-control window to exceed 2^31-1 octets."
+// RFC 7540 Section 6.9.1.
+
+// If there aren't at least inflowMinRefresh bytes of window to send,
+// and this update won't at least double the window, buffer the update for later.
 
 // take attempts to take n bytes from the peer's flow control window.
 // It reports whether the window has available capacity.
-func (f *inflow) take(n uint32) bool {
-	if n > uint32(f.avail) {
-		return false
-	}
-	f.avail -= int32(n)
-	return true
-}
+func (f *inflow) take(n uint32) bool { _ = "STUB: not implemented"; return false }
 
 // takeInflows attempts to take n bytes from two inflows,
 // typically connection-level and stream-level flows.
 // It reports whether both windows have available capacity.
-func takeInflows(f1, f2 *inflow, n uint32) bool {
-	if n > uint32(f1.avail) || n > uint32(f2.avail) {
-		return false
-	}
-	f1.avail -= int32(n)
-	f2.avail -= int32(n)
-	return true
-}
+func takeInflows(f1, f2 *inflow, n uint32) bool { _ = "STUB: not implemented"; return false }
 
 // outflow is the outbound flow control window's size.
 type outflow struct {
@@ -88,33 +61,12 @@ type outflow struct {
 	conn *outflow
 }
 
-func (f *outflow) setConnFlow(cf *outflow) { f.conn = cf }
+func (f *outflow) setConnFlow(cf *outflow) { _ = "STUB: not implemented"; return }
 
-func (f *outflow) available() int32 {
-	n := f.n
-	if f.conn != nil && f.conn.n < n {
-		n = f.conn.n
-	}
-	return n
-}
+func (f *outflow) available() int32 { _ = "STUB: not implemented"; return 0 }
 
-func (f *outflow) take(n int32) {
-	if n > f.available() {
-		panic("internal error: took too much")
-	}
-	f.n -= n
-	if f.conn != nil {
-		f.conn.n -= n
-	}
-}
+func (f *outflow) take(n int32) { _ = "STUB: not implemented"; return }
 
 // add adds n bytes (positive or negative) to the flow control window.
 // It returns false if the sum would exceed 2^31-1.
-func (f *outflow) add(n int32) bool {
-	sum := f.n + n
-	if (sum > n) == (f.n > 0) {
-		f.n = sum
-		return true
-	}
-	return false
-}
+func (f *outflow) add(n int32) bool { _ = "STUB: not implemented"; return false }

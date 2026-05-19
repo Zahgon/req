@@ -1,8 +1,6 @@
 package req
 
 import (
-	"bytes"
-	"fmt"
 	"net/http"
 	"net/url"
 )
@@ -20,20 +18,11 @@ type ContentDisposition struct {
 
 // Add adds a new key-value pair of Content-Disposition
 func (c *ContentDisposition) Add(key, value string) *ContentDisposition {
-	c.kv = append(c.kv, kv{Key: key, Value: value})
-	return c
+	_ = "STUB: not implemented"
+	return nil
 }
 
-func (c *ContentDisposition) string() string {
-	if c == nil {
-		return ""
-	}
-	s := ""
-	for _, kv := range c.kv {
-		s += fmt.Sprintf("; %s=%q", kv.Key, kv.Value)
-	}
-	return s
-}
+func (c *ContentDisposition) string() string { _ = "STUB: not implemented"; return "" }
 
 // FileUpload represents a "form-data" multipart
 type FileUpload struct {
@@ -84,45 +73,11 @@ type DownloadInfo struct {
 // response body download.
 type DownloadCallback func(info DownloadInfo)
 
-func cloneSlice[T any](s []T) []T {
-	if len(s) == 0 {
-		return nil
-	}
-	ss := make([]T, len(s))
-	copy(ss, s)
-	return ss
-}
+func cloneSlice[T any](s []T) []T { _ = "STUB: not implemented"; return nil }
 
-func cloneUrlValues(v url.Values) url.Values {
-	if v == nil {
-		return nil
-	}
-	vv := make(url.Values)
-	for key, values := range v {
-		for _, value := range values {
-			vv.Add(key, value)
-		}
-	}
-	return vv
-}
+func cloneUrlValues(v url.Values) url.Values { _ = "STUB: not implemented"; return *new(url.Values) }
 
-func cloneMap(h map[string]string) map[string]string {
-	if h == nil {
-		return nil
-	}
-	m := make(map[string]string)
-	for k, v := range h {
-		m[k] = v
-	}
-	return m
-}
+func cloneMap(h map[string]string) map[string]string { _ = "STUB: not implemented"; return nil }
 
 // convertHeaderToString converts http header to a string.
-func convertHeaderToString(h http.Header) string {
-	if h == nil {
-		return ""
-	}
-	buf := new(bytes.Buffer)
-	h.Write(buf)
-	return buf.String()
-}
+func convertHeaderToString(h http.Header) string { _ = "STUB: not implemented"; return "" }

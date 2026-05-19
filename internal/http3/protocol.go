@@ -16,20 +16,9 @@ const (
 )
 
 // Opposite returns the perspective of the peer
-func (p Perspective) Opposite() Perspective {
-	return 3 - p
-}
+func (p Perspective) Opposite() Perspective { _ = "STUB: not implemented"; return *new(Perspective) }
 
-func (p Perspective) String() string {
-	switch p {
-	case PerspectiveServer:
-		return "server"
-	case PerspectiveClient:
-		return "client"
-	default:
-		return "invalid perspective"
-	}
-}
+func (p Perspective) String() string { _ = "STUB: not implemented"; return "" }
 
 // The version numbers, making grepping easier
 const (
@@ -66,25 +55,6 @@ const (
 
 // StreamID calculates the stream ID.
 func (s StreamNum) StreamID(stype StreamType, pers Perspective) quic.StreamID {
-	if s == 0 {
-		return InvalidStreamID
-	}
-	var first quic.StreamID
-	switch stype {
-	case StreamTypeBidi:
-		switch pers {
-		case PerspectiveClient:
-			first = 0
-		case PerspectiveServer:
-			first = 1
-		}
-	case StreamTypeUni:
-		switch pers {
-		case PerspectiveClient:
-			first = 2
-		case PerspectiveServer:
-			first = 3
-		}
-	}
-	return first + 4*quic.StreamID(s-1)
+	_ = "STUB: not implemented"
+	return *new(quic.StreamID)
 }

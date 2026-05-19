@@ -32,50 +32,16 @@ type pipeBuffer interface {
 
 // setBuffer initializes the pipe buffer.
 // It has no effect if the pipe is already closed.
-func (p *pipe) setBuffer(b pipeBuffer) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.err != nil || p.breakErr != nil {
-		return
-	}
-	p.b = b
-}
+func (p *pipe) setBuffer(b pipeBuffer) { _ = "STUB: not implemented"; return }
 
-func (p *pipe) Len() int {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.b == nil {
-		return p.unread
-	}
-	return p.b.Len()
-}
+func (p *pipe) Len() int { _ = "STUB: not implemented"; return 0 }
 
 // Read waits until data is available and copies bytes
 // from the buffer into p.
-func (p *pipe) Read(d []byte) (n int, err error) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.c.L == nil {
-		p.c.L = &p.mu
-	}
-	for {
-		if p.breakErr != nil {
-			return 0, p.breakErr
-		}
-		if p.b != nil && p.b.Len() > 0 {
-			return p.b.Read(d)
-		}
-		if p.err != nil {
-			if p.readFn != nil {
-				p.readFn()     // e.g. copy trailers
-				p.readFn = nil // not sticky like p.err
-			}
-			p.b = nil
-			return 0, p.err
-		}
-		p.c.Wait()
-	}
-}
+func (p *pipe) Read(d []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
+
+// e.g. copy trailers
+// not sticky like p.err
 
 var (
 	errClosedPipeWrite        = errors.New("write on closed buffer")
@@ -84,101 +50,43 @@ var (
 
 // Write copies bytes from p into the buffer and wakes a reader.
 // It is an error to write more data than the buffer can hold.
-func (p *pipe) Write(d []byte) (n int, err error) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.c.L == nil {
-		p.c.L = &p.mu
-	}
-	defer p.c.Signal()
-	if p.err != nil || p.breakErr != nil {
-		return 0, errClosedPipeWrite
-	}
-	// pipe.setBuffer is never invoked, leaving the buffer uninitialized.
-	// We shouldn't try to write to an uninitialized pipe,
-	// but returning an error is better than panicking.
-	if p.b == nil {
-		return 0, errUninitializedPipeWrite
-	}
-	return p.b.Write(d)
-}
+func (p *pipe) Write(d []byte) (n int, err error) { _ = "STUB: not implemented"; return 0, nil }
+
+// pipe.setBuffer is never invoked, leaving the buffer uninitialized.
+// We shouldn't try to write to an uninitialized pipe,
+// but returning an error is better than panicking.
 
 // CloseWithError causes the next Read (waking up a current blocked
 // Read if needed) to return the provided err after all data has been
 // read.
 //
 // The error must be non-nil.
-func (p *pipe) CloseWithError(err error) { p.closeWithError(&p.err, err, nil) }
+func (p *pipe) CloseWithError(err error) { _ = "STUB: not implemented"; return }
 
 // BreakWithError causes the next Read (waking up a current blocked
 // Read if needed) to return the provided err immediately, without
 // waiting for unread data.
-func (p *pipe) BreakWithError(err error) { p.closeWithError(&p.breakErr, err, nil) }
+func (p *pipe) BreakWithError(err error) { _ = "STUB: not implemented"; return }
 
 // closeWithErrorAndCode is like CloseWithError but also sets some code to run
 // in the caller's goroutine before returning the error.
-func (p *pipe) closeWithErrorAndCode(err error, fn func()) { p.closeWithError(&p.err, err, fn) }
+func (p *pipe) closeWithErrorAndCode(err error, fn func()) { _ = "STUB: not implemented"; return }
 
-func (p *pipe) closeWithError(dst *error, err error, fn func()) {
-	if err == nil {
-		panic("err must be non-nil")
-	}
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.c.L == nil {
-		p.c.L = &p.mu
-	}
-	defer p.c.Signal()
-	if *dst != nil {
-		// Already been done.
-		return
-	}
-	p.readFn = fn
-	if dst == &p.breakErr {
-		if p.b != nil {
-			p.unread += p.b.Len()
-		}
-		p.b = nil
-	}
-	*dst = err
-	p.closeDoneLocked()
-}
+func (p *pipe) closeWithError(dst *error, err error, fn func()) { _ = "STUB: not implemented"; return }
+
+// Already been done.
 
 // requires p.mu be held.
-func (p *pipe) closeDoneLocked() {
-	if p.donec == nil {
-		return
-	}
-	// Close if unclosed. This isn't racy since we always
-	// hold p.mu while closing.
-	select {
-	case <-p.donec:
-	default:
-		close(p.donec)
-	}
-}
+func (p *pipe) closeDoneLocked() { _ = "STUB: not implemented"; return }
+
+// Close if unclosed. This isn't racy since we always
+// hold p.mu while closing.
 
 // Err returns the error (if any) first set by BreakWithError or CloseWithError.
-func (p *pipe) Err() error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.breakErr != nil {
-		return p.breakErr
-	}
-	return p.err
-}
+func (p *pipe) Err() error { _ = "STUB: not implemented"; return nil }
 
 // Done returns a channel which is closed if and when this pipe is closed
 // with CloseWithError.
-func (p *pipe) Done() <-chan struct{} {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	if p.donec == nil {
-		p.donec = make(chan struct{})
-		if p.err != nil || p.breakErr != nil {
-			// Already hit an error.
-			p.closeDoneLocked()
-		}
-	}
-	return p.donec
-}
+func (p *pipe) Done() <-chan struct{} { _ = "STUB: not implemented"; return nil }
+
+// Already hit an error.

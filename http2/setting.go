@@ -1,9 +1,5 @@
 package http2
 
-import (
-	"fmt"
-)
-
 // A SettingID is an HTTP/2 setting as defined in
 // https://httpwg.org/specs/rfc7540.html#iana-settings
 type SettingID uint16
@@ -26,12 +22,7 @@ var settingName = map[SettingID]string{
 	SettingMaxHeaderListSize:    "MAX_HEADER_LIST_SIZE",
 }
 
-func (s SettingID) String() string {
-	if v, ok := settingName[s]; ok {
-		return v
-	}
-	return fmt.Sprintf("UNKNOWN_SETTING_%d", uint16(s))
-}
+func (s SettingID) String() string { _ = "STUB: not implemented"; return "" }
 
 // Setting is a setting parameter: which setting it is, and its value.
 type Setting struct {
@@ -43,6 +34,4 @@ type Setting struct {
 	Val uint32
 }
 
-func (s Setting) String() string {
-	return fmt.Sprintf("[%v = %d]", s.ID, s.Val)
-}
+func (s Setting) String() string { _ = "STUB: not implemented"; return "" }

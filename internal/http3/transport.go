@@ -4,18 +4,13 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"net"
 	"net/http"
-	"net/http/httptrace"
 	"net/url"
-	"strings"
 	"sync"
 	"sync/atomic"
-
-	"golang.org/x/net/http/httpguts"
 
 	"github.com/imroc/req/v3/internal/transport"
 	"github.com/quic-go/quic-go"
@@ -53,14 +48,7 @@ type roundTripperWithCount struct {
 	useCount atomic.Int64
 }
 
-func (r *roundTripperWithCount) Close() error {
-	r.cancel()
-	<-r.dialing
-	if r.conn != nil {
-		return r.conn.CloseWithError(0, "")
-	}
-	return nil
-}
+func (r *roundTripperWithCount) Close() error { _ = "STUB: not implemented"; return nil }
 
 // Transport implements the http.RoundTripper interface
 type Transport struct {
@@ -173,273 +161,73 @@ func (t *Transport) init() error {
 
 // RoundTripOpt is like RoundTrip, but takes options.
 func (t *Transport) RoundTripOpt(req *http.Request, opt RoundTripOpt) (*http.Response, error) {
-	rsp, err := t.roundTripOpt(req, opt)
-	if err != nil {
-		if req.Body != nil {
-			req.Body.Close()
-		}
-		return nil, err
-	}
-	return rsp, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (t *Transport) roundTripOpt(req *http.Request, opt RoundTripOpt) (*http.Response, error) {
-	t.initOnce.Do(func() { t.initErr = t.init() })
-	if t.initErr != nil {
-		return nil, t.initErr
-	}
-
-	if req.URL == nil {
-		return nil, errors.New("http3: nil Request.URL")
-	}
-	if req.URL.Scheme != "https" {
-		return nil, fmt.Errorf("http3: unsupported protocol scheme: %s", req.URL.Scheme)
-	}
-	if req.URL.Host == "" {
-		return nil, errors.New("http3: no Host in request URL")
-	}
-	if req.Header == nil {
-		return nil, errors.New("http3: nil Request.Header")
-	}
-	if req.Method != "" && !validMethod(req.Method) {
-		return nil, fmt.Errorf("http3: invalid method %q", req.Method)
-	}
-	for k, vv := range req.Header {
-		if !httpguts.ValidHeaderFieldName(k) {
-			return nil, fmt.Errorf("http3: invalid http header field name %q", k)
-		}
-		for _, v := range vv {
-			if !httpguts.ValidHeaderFieldValue(v) {
-				return nil, fmt.Errorf("http3: invalid http header field value %q for key %v", v, k)
-			}
-		}
-	}
-	return t.doRoundTripOpt(req, opt, false)
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 func (t *Transport) doRoundTripOpt(req *http.Request, opt RoundTripOpt, isRetried bool) (*http.Response, error) {
-	hostname := authorityAddr(hostnameFromURL(req.URL))
-	trace := httptrace.ContextClientTrace(req.Context())
-	traceGetConn(trace, hostname)
-	cl, isReused, err := t.getClient(req.Context(), hostname, opt.OnlyCachedConn)
-	if err != ErrNoCachedConn {
-		if debugf := t.Debugf; debugf != nil {
-			debugf("HTTP/3 %s %s", req.Method, req.URL.String())
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	select {
-	case <-cl.dialing:
-	case <-req.Context().Done():
-		return nil, context.Cause(req.Context())
-	}
-
-	if cl.dialErr != nil {
-		t.removeClient(hostname)
-		return nil, cl.dialErr
-	}
-	defer cl.useCount.Add(-1)
-	traceGotConn(trace, cl.conn, isReused)
-	rsp, err := cl.clientConn.RoundTrip(req)
-	if err != nil {
-		// request aborted due to context cancellation
-		select {
-		case <-req.Context().Done():
-			return nil, err
-		default:
-		}
-		if isRetried {
-			return nil, err
-		}
-
-		t.removeClient(hostname)
-		req, err = canRetryRequest(err, req)
-		if err != nil {
-			return nil, err
-		}
-		return t.doRoundTripOpt(req, opt, true)
-	}
-	return rsp, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
+
+// request aborted due to context cancellation
 
 func canRetryRequest(err error, req *http.Request) (*http.Request, error) {
+	_ = "STUB: not implemented"
 	// error occurred while opening the stream, we can be sure that the request wasn't sent out
-	var connErr *errConnUnusable
-	if errors.As(err, &connErr) {
-		return req, nil
-	}
-
-	// If the request stream is reset, we can only be sure that the request wasn't processed
-	// if the error code is H3_REQUEST_REJECTED.
-	var e *Error
-	if !errors.As(err, &e) || e.ErrorCode != ErrCodeRequestRejected {
-		return nil, err
-	}
-	// if the body is nil (or http.NoBody), it's safe to reuse this request and its body
-	if req.Body == nil || req.Body == http.NoBody {
-		return req, nil
-	}
-	// if the request body can be reset back to its original state via req.GetBody, do that
-	if req.GetBody != nil {
-		newBody, err := req.GetBody()
-		if err != nil {
-			return nil, err
-		}
-		reqCopy := *req
-		reqCopy.Body = newBody
-		req = &reqCopy
-		return &reqCopy, nil
-	}
-	return nil, fmt.Errorf("http3: Transport: cannot retry err [%w] after Request.Body was written; define Request.GetBody to avoid this error", err)
+	return nil, nil
 }
+
+// If the request stream is reset, we can only be sure that the request wasn't processed
+// if the error code is H3_REQUEST_REJECTED.
+
+// if the body is nil (or http.NoBody), it's safe to reuse this request and its body
+
+// if the request body can be reset back to its original state via req.GetBody, do that
 
 // RoundTrip does a round trip.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	return t.RoundTripOpt(req, RoundTripOpt{})
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // RoundTripOnlyCachedConn round trip only cached conn.
 func (t *Transport) RoundTripOnlyCachedConn(req *http.Request) (*http.Response, error) {
-	return t.RoundTripOpt(req, RoundTripOpt{OnlyCachedConn: true})
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
 // AddConn add a http3 connection, dial new conn if not exists.
 func (t *Transport) AddConn(ctx context.Context, addr string) error {
-	addr = authorityAddr(addr)
-	cl, _, err := t.getClient(ctx, addr, false)
-	if err == nil {
-		cl.useCount.Add(-1)
-	}
-	return err
+	_ = "STUB: not implemented"
+	return nil
 }
 
 func (t *Transport) getClient(ctx context.Context, hostname string, onlyCached bool) (rtc *roundTripperWithCount, isReused bool, err error) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	if t.closed {
-		return nil, false, ErrTransportClosed
-	}
-
-	if t.clients == nil {
-		t.clients = make(map[string]*roundTripperWithCount)
-	}
-
-	cl, ok := t.clients[hostname]
-	if !ok {
-		if onlyCached {
-			return nil, false, ErrNoCachedConn
-		}
-		ctx, cancel := context.WithCancel(ctx)
-		cl = &roundTripperWithCount{
-			dialing: make(chan struct{}),
-			cancel:  cancel,
-		}
-		go func() {
-			defer close(cl.dialing)
-			defer cancel()
-			conn, rt, err := t.dial(ctx, hostname)
-			if err != nil {
-				cl.dialErr = err
-				return
-			}
-			cl.conn = conn
-			cl.clientConn = rt
-		}()
-		t.clients[hostname] = cl
-	}
-	select {
-	case <-cl.dialing:
-		if cl.dialErr != nil {
-			delete(t.clients, hostname)
-			return nil, false, cl.dialErr
-		}
-		select {
-		case <-cl.conn.HandshakeComplete():
-			isReused = true
-		default:
-		}
-	default:
-	}
-	cl.useCount.Add(1)
-	return cl, isReused, nil
+	_ = "STUB: not implemented"
+	return nil, false, nil
 }
 
 func (t *Transport) dial(ctx context.Context, hostname string) (*quic.Conn, clientConn, error) {
-	var tlsConf *tls.Config
-	if t.TLSClientConfig == nil {
-		tlsConf = &tls.Config{}
-	} else {
-		tlsConf = t.TLSClientConfig.Clone()
-	}
-	if tlsConf.ServerName == "" {
-		sni, _, err := net.SplitHostPort(hostname)
-		if err != nil {
-			// It's ok if net.SplitHostPort returns an error - it could be a hostname/IP address without a port.
-			sni = hostname
-		}
-		tlsConf.ServerName = sni
-	}
-	// Replace existing ALPNs by H3
-	tlsConf.NextProtos = []string{NextProtoH3}
-
-	dial := t.Dial
-	if dial == nil {
-		dial = func(ctx context.Context, addr string, tlsCfg *tls.Config, cfg *quic.Config) (*quic.Conn, error) {
-			network := "udp"
-			udpAddr, err := t.resolveUDPAddr(ctx, network, addr)
-			if err != nil {
-				return nil, err
-			}
-			trace := httptrace.ContextClientTrace(ctx)
-			traceConnectStart(trace, network, udpAddr.String())
-			traceTLSHandshakeStart(trace)
-			conn, err := t.transport.DialEarly(ctx, udpAddr, tlsCfg, cfg)
-			var state tls.ConnectionState
-			if conn != nil {
-				state = conn.ConnectionState().TLS
-			}
-			traceTLSHandshakeDone(trace, state, err)
-			traceConnectDone(trace, network, udpAddr.String(), err)
-			return conn, err
-		}
-	}
-	conn, err := dial(ctx, hostname, tlsConf, t.QUICConfig)
-	if err != nil {
-		return nil, nil, err
-	}
-	return conn, t.newClientConn(conn), nil
+	_ = "STUB: not implemented"
+	return nil, *new(clientConn), nil
 }
+
+// It's ok if net.SplitHostPort returns an error - it could be a hostname/IP address without a port.
+
+// Replace existing ALPNs by H3
 
 func (t *Transport) resolveUDPAddr(ctx context.Context, network, addr string) (*net.UDPAddr, error) {
-	host, portStr, err := net.SplitHostPort(addr)
-	if err != nil {
-		return nil, err
-	}
-	port, err := net.LookupPort(network, portStr)
-	if err != nil {
-		return nil, err
-	}
-	resolver := net.DefaultResolver
-	ipAddrs, err := resolver.LookupIPAddr(ctx, host)
-	if err != nil {
-		return nil, err
-	}
-	addrs := addrList(ipAddrs)
-	ip := addrs.forResolve(network, addr)
-	return &net.UDPAddr{IP: ip.IP, Port: port, Zone: ip.Zone}, nil
+	_ = "STUB: not implemented"
+	return nil, nil
 }
 
-func (t *Transport) removeClient(hostname string) {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	if t.clients == nil {
-		return
-	}
-	delete(t.clients, hostname)
-}
+func (t *Transport) removeClient(hostname string) { _ = "STUB: not implemented"; return }
 
 // NewClientConn creates a new HTTP/3 client connection on top of a QUIC connection.
 // Most users should use RoundTrip instead of creating a connection directly.
@@ -448,51 +236,18 @@ func (t *Transport) removeClient(hostname string) {
 // Obtaining a ClientConn is only needed for more advanced use cases, such as
 // using Extended CONNECT for WebTransport or the various MASQUE protocols.
 func (t *Transport) NewClientConn(conn *quic.Conn) *ClientConn {
-	return newClientConn(
-		t.Options,
-		conn,
-		t.EnableDatagrams,
-		t.AdditionalSettings,
-		t.StreamHijacker,
-		t.UniStreamHijacker,
-		t.MaxResponseHeaderBytes,
-		t.DisableCompression,
-		t.Logger,
-	)
+	_ = "STUB: not implemented"
+	return nil
 }
 
 // Close closes the QUIC connections that this Transport has used.
 // A Transport cannot be used after it has been closed.
-func (t *Transport) Close() error {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	for _, cl := range t.clients {
-		if err := cl.Close(); err != nil {
-			return err
-		}
-	}
-	t.clients = nil
-	if t.transport != nil {
-		if err := t.transport.Close(); err != nil {
-			return err
-		}
-		if err := t.transport.Conn.Close(); err != nil {
-			return err
-		}
-		t.transport = nil
-	}
-	t.closed = true
-	return nil
-}
+func (t *Transport) Close() error { _ = "STUB: not implemented"; return nil }
 
-func hostnameFromURL(url *url.URL) string {
-	if url != nil {
-		return url.Host
-	}
-	return ""
-}
+func hostnameFromURL(url *url.URL) string { _ = "STUB: not implemented"; return "" }
 
 func validMethod(method string) bool {
+	_ = "STUB: not implemented"
 	/*
 				     Method         = "OPTIONS"                ; Section 9.2
 		   		                    | "GET"                    ; Section 9.3
@@ -505,26 +260,14 @@ func validMethod(method string) bool {
 		   		                    | extension-method
 		   		   extension-method = token
 		   		     token          = 1*<any CHAR except CTLs or separators>
-	*/
-	return len(method) > 0 && strings.IndexFunc(method, isNotToken) == -1
+	*/return false
 }
 
 // copied from net/http/http.go
-func isNotToken(r rune) bool {
-	return !httpguts.IsTokenRune(r)
-}
+func isNotToken(r rune) bool { _ = "STUB: not implemented"; return false }
 
 // CloseIdleConnections closes any QUIC connections in the transport's pool that are currently idle.
 // An idle connection is one that was previously used for requests but is now sitting unused.
 // This method does not interrupt any connections currently in use.
 // It also does not affect connections obtained via NewClientConn.
-func (t *Transport) CloseIdleConnections() {
-	t.mutex.Lock()
-	defer t.mutex.Unlock()
-	for hostname, cl := range t.clients {
-		if cl.useCount.Load() == 0 {
-			cl.Close()
-			delete(t.clients, hostname)
-		}
-	}
-}
+func (t *Transport) CloseIdleConnections() { _ = "STUB: not implemented"; return }

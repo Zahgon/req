@@ -9,15 +9,6 @@ type CompressReader interface {
 }
 
 func NewCompressReader(body io.ReadCloser, contentEncoding string) CompressReader {
-	switch contentEncoding {
-	case "gzip":
-		return NewGzipReader(body)
-	case "deflate":
-		return NewDeflateReader(body)
-	case "br":
-		return NewBrotliReader(body)
-	case "zstd":
-		return NewZstdReader(body)
-	}
-	return nil
+	_ = "STUB: not implemented"
+	return *new(CompressReader)
 }

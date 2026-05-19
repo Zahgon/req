@@ -5,8 +5,6 @@
 // Package testcert contains a test-only localhost certificate.
 package testcert
 
-import "strings"
-
 // LocalhostCert is a PEM-encoded TLS cert with SAN IPs
 // "127.0.0.1" and "[::1]", expiring at Jan 29 16:00:00 2084 GMT.
 // generated from src/crypto/tls:
@@ -43,4 +41,4 @@ qyUBnu3X9ps8ZfjLZO7BAkEAlT4R5Yl6cGhaJQYZHOde3JEMhNRcVFMO8dJDaFeo
 f9Oeos0UUothgiDktdQHxdNEwLjQf7lJJBzV+5OtwswCWA==
 -----END RSA TESTING KEY-----`))
 
-func testingKey(s string) string { return strings.ReplaceAll(s, "TESTING KEY", "PRIVATE KEY") }
+func testingKey(s string) string { _ = "STUB: not implemented"; return "" }

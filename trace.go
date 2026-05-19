@@ -2,8 +2,6 @@ package req
 
 import (
 	"context"
-	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http/httptrace"
 	"time"
@@ -28,41 +26,10 @@ LocalAddr         : %v`
 )
 
 // Blame return the human-readable reason of why request is slowing.
-func (t TraceInfo) Blame() string {
-	if t.RemoteAddr == nil {
-		return "trace is not enabled"
-	}
-	var mk string
-	var mv time.Duration
-	m := map[string]time.Duration{
-		"on dns lookup":    t.DNSLookupTime,
-		"on tcp connect":   t.TCPConnectTime,
-		"on tls handshake": t.TLSHandshakeTime,
-		"from connection ready to server respond first byte":   t.FirstResponseTime,
-		"from server respond first byte to request completion": t.ResponseTime,
-	}
-	for k, v := range m {
-		if v > mv {
-			mk = k
-			mv = v
-		}
-	}
-	if mk == "" {
-		return "nothing to blame"
-	}
-	return fmt.Sprintf("the request total time is %v, and costs %v %s", t.TotalTime, mv, mk)
-}
+func (t TraceInfo) Blame() string { _ = "STUB: not implemented"; return "" }
 
 // String return the details of trace information.
-func (t TraceInfo) String() string {
-	if t.RemoteAddr == nil {
-		return "trace is not enabled"
-	}
-	if t.IsConnReused {
-		return fmt.Sprintf(traceReusedFmt, t.TotalTime, t.FirstResponseTime, t.ResponseTime, t.RemoteAddr, t.LocalAddr)
-	}
-	return fmt.Sprintf(traceFmt, t.TotalTime, t.DNSLookupTime, t.TCPConnectTime, t.TLSHandshakeTime, t.FirstResponseTime, t.ResponseTime, t.RemoteAddr, t.LocalAddr)
-}
+func (t TraceInfo) String() string { _ = "STUB: not implemented"; return "" }
 
 // TraceInfo represents the trace information.
 type TraceInfo struct {
@@ -123,42 +90,6 @@ type clientTrace struct {
 }
 
 func (t *clientTrace) createContext(ctx context.Context) context.Context {
-	return httptrace.WithClientTrace(
-		ctx,
-		&httptrace.ClientTrace{
-			DNSStart: func(_ httptrace.DNSStartInfo) {
-				t.dnsStart = time.Now()
-			},
-			DNSDone: func(_ httptrace.DNSDoneInfo) {
-				t.dnsDone = time.Now()
-			},
-			ConnectStart: func(_, _ string) {
-				if t.dnsDone.IsZero() {
-					t.dnsDone = time.Now()
-				}
-				if t.dnsStart.IsZero() {
-					t.dnsStart = t.dnsDone
-				}
-			},
-			ConnectDone: func(net, addr string, err error) {
-				t.connectDone = time.Now()
-			},
-			GetConn: func(_ string) {
-				t.getConn = time.Now()
-			},
-			GotConn: func(ci httptrace.GotConnInfo) {
-				t.gotConn = time.Now()
-				t.gotConnInfo = ci
-			},
-			GotFirstResponseByte: func() {
-				t.gotFirstResponseByte = time.Now()
-			},
-			TLSHandshakeStart: func() {
-				t.tlsHandshakeStart = time.Now()
-			},
-			TLSHandshakeDone: func(_ tls.ConnectionState, _ error) {
-				t.tlsHandshakeDone = time.Now()
-			},
-		},
-	)
+	_ = "STUB: not implemented"
+	return *new(context.Context)
 }
